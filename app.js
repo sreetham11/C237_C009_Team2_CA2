@@ -6,12 +6,15 @@ const path = require('path');
 const app = express();
 
 // ---- Database connection ----
-// TODO: update these credentials to match your local MySQL setup
+// Shared team Azure MySQL database
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'Ra196166',
-  database: 'resellvault'
+  host: 'C237-marlina-mysql.mysql.database.azure.com',
+  user: 'c237_009',
+  password: 'c237009@2026!',
+  database: 'c237_009_team2_userdb',
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 connection.connect((error) => {

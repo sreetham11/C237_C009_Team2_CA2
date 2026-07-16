@@ -1,0 +1,19 @@
+{
+  "name": "resellvault",
+  "version": "1.0.0",
+  "description": "ResellVault - Reseller inventory system for trading cards, collectibles, and clothing (C237 CA2 Team Project)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ejs": "^3.1.10",
+    "mysql2": "^3.10.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head><title>Edit Product</title></head>
+<body>
+  <h1>Edit Product</h1>
+  <% if (product) { %>
+    <form action="/editProduct/<%= product.product_id %>" method="POST" enctype="multipart/form-data">
+      <label>Name:</label><br>
+      <input type="text" name="name" value="<%= product.name %>" required><br><br>
+
+      <label>Description:</label><br>
+      <textarea name="description" rows="4" cols="40"><%= product.description %></textarea><br><br>
+
+      <label>Category:</label><br>
+      <select name="category">
+      <option value="Clothing" <%= product.category === 'Clothing' ? 'selected' : '' %>>Clothing</option>
+      <option value="Shoes" <%= product.category === 'Shoes' ? 'selected' : '' %>>Shoes</option>
+      <option value="Accessories" <%= product.category === 'Accessories' ? 'selected' : '' %>>Accessories</option>
+      <option value="Electronics" <%= product.category === 'Electronics' ? 'selected' : '' %>>Electronics</option>
+      <option value="Collectibles" <%= product.category === 'Collectibles' ? 'selected' : '' %>>Collectibles</option>
+      <option value="Others" <%= product.category === 'Others' ? 'selected' : '' %>>Others</option>
+      </select><br><br>
+
+      <label>If Others, please specify:</label><br>
+      <input type="text" name="category_other" placeholder="e.g. Trading Cards"><br><br>
+
+      <label>Delivery Method:</label><br>
+      <select name="delivery_method">
+      <option value="meetup" <%= product.delivery_method === 'meetup' ? 'selected' : '' %>>Meet-up</option>
+      <option value="delivery" <%= product.delivery_method === 'delivery' ? 'selected' : '' %>>Delivery</option>
+      <option value="both" <%= product.delivery_method === 'both' ? 'selected' : '' %>>Both</option>
+      </select><br><br>
+
+      <label>Meet-up Location:</label><br>
+      <input type="text" name="meetup_location" value="<%= product.meetup_location %>"><br><br>
+
+      <label>Condition:</label><br>
+      <input type="radio" name="condition_type" value="new" <%= product.condition_type === 'new' ? 'checked' : '' %>> New
+      <input type="radio" name="condition_type" value="used" <%= product.condition_type === 'used' ? 'checked' : '' %>> Used
+      <br><br>
+
+      <label>Quantity:</label><br>
+      <input type="number" name="quantity" value="<%= product.quantity %>" required><br><br>
+
+      <label>Price:</label><br>
+      <input type="number" step="0.01" name="price" value="<%= product.price %>" required><br><br>
+
+      <label>Current Image:</label><br>
+      <input type="text" name="currentImage" value="<%= product.image %>" readonly><br>
+      <img src="/images/<%= product.image %>" width="150"><br><br>
+      <label>New Image (optional):</label><br>
+      <input type="file" name="image" accept="image/*"><br><br>
+      <button type="submit">Update Product</button>
+    </form>
+  <% } %>
+</body>
+</html>

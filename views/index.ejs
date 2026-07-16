@@ -1,31 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>ResellVault - All Products</title>
-</head>
-<body>
-<h1>ResellVault - All Products</h1>
 
-<table border="1" cellpadding="8">
-<tr>
-<th>Name</th>
-<th>Image</th>
-<th>Price</th>
-<th>Quantity</th>
-<th>Category</th>
-<th>Edit</th>
-</tr>
-<% for(let i = 0; i < products.length; i++) { %>
-<tr>
-<td><%= products[i].name %></td>
-<td><img src="/images/<%= products[i].image %>" alt="<%= products[i].name %>" width="100"></td>
-<td>$<%= products[i].price %></td>
-<td><%= products[i].quantity %></td>
-<td><%= products[i].category %></td>
-<td><a href="/editProduct/<%= products[i].product_id %>">Edit</a></td>
-</tr>
-<% } %>
-</table>
+<head>
+  <meta charset="UTF-8">
+  <title>ResellVault - All Products</title>
+</head>
+
+<body>
+
+  <h1>ResellVault - All Products</h1>
+
+  <!-- Search and filter form -->
+  <h2>Search and Filter Products</h2>
+
+  <form action="/searchProducts" method="POST">
+
+    <p>
+      <label for="searchName">Product Name:</label>
+
+      <input
+        type="text"
+        id="searchName"
+        name="searchName"
+        placeholder="Enter exact product name">
+    </p>
+
+    <p>
+      <label for="searchCategory">Category:</label>
+
+      <select id="searchCategory" name="searchCategory">
+
+        <option value="">All Categories</option>
+        <option value="Trading Cards">Trading Cards</option>
+        <option value="Collectibles">Collectibles</option>
+        <option value="Clothing">Clothing</option>
+
+      </select>
+    </p>
+
+    <button type="submit">
+      Search
+    </button>
+
+    <a href="/">
+      Clear
+    </a>
+
+  </form>
+
+  <hr>
+
+  <h2>All Products</h2>
+
+  <table border="1" cellpadding="8">
+
+    <tr>
+      <th>Name</th>
+      <th>Image</th>
+      <th>Price</th>
+      <th>Quantity</th>
+      <th>Category</th>
+      <th>Edit</th>
+    </tr>
+
+    <% for (let i = 0; i < products.length; i++) { %>
+
+      <tr>
+
+        <td>
+          <%= products[i].name %>
+        </td>
+
+        <td>
+
+          <% if (products[i].image) { %>
+
+            <img
+              src="/images/<%= products[i].image %>"
+              alt="<%= products[i].name %>"
+              width="100">
+
+          <% } else { %>
+
+            No image
+
+          <% } %>
+
+        </td>
+
+        <td>
+          $<%= products[i].price %>
+        </td>
+
+        <td>
+          <%= products[i].quantity %>
+        </td>
+
+        <td>
+          <%= products[i].category %>
+        </td>
+
+        <td>
+          <a href="/editProduct/<%= products[i].product_id %>">
+            Edit
+          </a>
+        </td>
+
+      </tr>
+
+    <% } %>
+
+  </table>
+
 </body>
+
 </html>

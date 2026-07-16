@@ -107,9 +107,64 @@ app.post('/editProduct/:id', upload.single('image'), (req, res) => {
   });
 });
 
-// ---- TODO: Person D — Delete Product route (GET /deleteProduct/:id) ----
+// ---- TODO: Person E — Delete Product route (GET /deleteProduct/:id) ----
 
-// ---- TODO: Person E — Search/filter routes ----
+// ---- TODO: Person F — Search/filter routes ----
+// Display the search and filter page
+app.get('/searchProducts', (req, res) => {
+  const sql = 'SELECT * FROM products';
+
+  connection.query(sql, (error, results) => {
+    if (error) {
+      console.error('Error retrieving products:', error);
+      return res.send('Error retrieving products');
+    }
+
+    res.render('searchProducts', {
+      products: results,
+      searchName: '',
+      searchCategory: ''
+    });
+  });
+});
+
+
+// Process the search and filter form
+app.post('/searchProducts', (req, res) => {
+  const { searchName, searchCategory } = req.body;
+
+  let sql = 'SELECT * FROM products';
+  let values = [];
+
+  // Search using both product name and category
+  if (searchName && searchCategory) {
+    sql = 'SELECT * FROM products WHERE name = ? AND category = ?';
+    values = [searchName, searchCategory];
+
+  // Search using product name only
+  } else if (searchName) {
+    sql = 'SELECT * FROM products WHERE name = ?';
+    values = [searchName];
+
+  // Filter using category only
+  } else if (searchCategory) {
+    sql = 'SELECT * FROM products WHERE category = ?';
+    values = [searchCategory];
+  }
+
+  connection.query(sql, values, (error, results) => {
+    if (error) {
+      console.error('Error searching products:', error);
+      return res.send('Error searching products');
+    }
+
+    res.render('searchProducts', {
+      products: results,
+      searchName: searchName,
+      searchCategory: searchCategory
+    });
+  });
+});
 
 // ---- TODO: LOGIN/SESSIONS  ---
 

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Search Results - ResellVault</title>
+</head>
+
+<body>
+
+  <h1>Search Results</h1>
+
+  <!-- Search form -->
+  <form action="/searchProducts" method="POST">
+
+    <p>
+      <label for="searchName">Product Name:</label>
+
+      <input
+        type="text"
+        id="searchName"
+        name="searchName"
+        value="<%= searchName %>"
+        placeholder="Enter exact product name">
+    </p>
+
+    <p>
+      <label for="searchCategory">Category:</label>
+
+      <select id="searchCategory" name="searchCategory">
+
+        <option value="">
+          All Categories
+        </option>
+
+        <option
+          value="Trading Cards"
+          <% if (searchCategory === 'Trading Cards') { %>
+            selected
+          <% } %>>
+          Trading Cards
+        </option>
+
+        <option
+          value="Collectibles"
+          <% if (searchCategory === 'Collectibles') { %>
+            selected
+          <% } %>>
+          Collectibles
+        </option>
+
+        <option
+          value="Clothing"
+          <% if (searchCategory === 'Clothing') { %>
+            selected
+          <% } %>>
+          Clothing
+        </option>
+
+      </select>
+    </p>
+
+    <button type="submit">
+      Search
+    </button>
+
+    <a href="/">
+      Clear Search
+    </a>
+
+  </form>
+
+  <hr>
+
+  <% if (products.length > 0) { %>
+
+    <table border="1" cellpadding="8">
+
+      <tr>
+        <th>Name</th>
+        <th>Image</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th>Category</th>
+        <th>Edit</th>
+      </tr>
+
+      <% for (let i = 0; i < products.length; i++) { %>
+
+        <tr>
+
+          <td>
+            <%= products[i].name %>
+          </td>
+
+          <td>
+
+            <% if (products[i].image) { %>
+
+              <img
+                src="/images/<%= products[i].image %>"
+                alt="<%= products[i].name %>"
+                width="100">
+
+            <% } else { %>
+
+              No image
+
+            <% } %>
+
+          </td>
+
+          <td>
+            $<%= products[i].price %>
+          </td>
+
+          <td>
+            <%= products[i].quantity %>
+          </td>
+
+          <td>
+            <%= products[i].category %>
+          </td>
+
+          <td>
+            <a href="/editProduct/<%= products[i].product_id %>">
+              Edit
+            </a>
+          </td>
+
+        </tr>
+
+      <% } %>
+
+    </table>
+
+  <% } else { %>
+
+    <p>No matching products found.</p>
+
+  <% } %>
+
+  <br>
+
+  <a href="/">
+    Back to All Products
+  </a>
+
+</body>
+
+</html>

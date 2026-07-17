@@ -1,19 +1,119 @@
+<!-- Bootstrap and Bootstrap Icons -->
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  rel="stylesheet">
+
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+  rel="stylesheet">
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+
   <div class="container-fluid">
-    <!-- Logo on the left -->
+
+    <!-- Logo and name -->
     <a class="navbar-brand d-flex align-items-center" href="/">
-      <img src="/images/logo.png" alt="ResellVault Logo" width="40" height="40" class="me-2">
+
+      <i class="bi bi-box-seam-fill me-2"></i>
+
       ResellVault
+
     </a>
 
-    <!-- Centered Search Bar -->
-    <div class="mx-auto" style="width: 50%;">
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Search..." aria-label="Search">
-        <button class="btn btn-primary" type="submit">
+    <!-- Search bar -->
+    <div class="mx-auto navbar-search">
+
+      <form
+        class="d-flex"
+        action="/searchProducts"
+        method="POST">
+
+        <input
+          class="form-control me-2"
+          type="text"
+          name="searchName"
+          placeholder="Search exact product name">
+
+        <input
+          type="hidden"
+          name="searchCategory"
+          value="">
+
+        <button
+          class="btn btn-primary"
+          type="submit">
+
           <i class="bi bi-search"></i>
+
         </button>
+
       </form>
+
     </div>
+
+    <!-- Account buttons -->
+    <div class="ms-auto">
+
+      <% if (user) { %>
+
+        <span class="text-light me-3">
+          Hello, <%= user.username %>
+        </span>
+
+        <a
+          href="/dashboard"
+          class="btn btn-outline-light me-2">
+
+          Dashboard
+
+        </a>
+
+        <a
+          href="/logout"
+          class="btn btn-danger">
+
+          Logout
+
+        </a>
+
+      <% } else { %>
+
+        <a
+          href="/login"
+          class="btn btn-outline-light me-2">
+
+          Login
+
+        </a>
+
+        <a
+          href="/register"
+          class="btn btn-primary">
+
+          Register
+
+        </a>
+
+      <% } %>
+
+    </div>
+
   </div>
+
 </nav>
+
+<style>
+
+  .navbar-search {
+    width: 50%;
+  }
+
+  @media screen and (max-width: 768px) {
+
+    .navbar-search {
+      width: 40%;
+    }
+
+  }
+
+</style>

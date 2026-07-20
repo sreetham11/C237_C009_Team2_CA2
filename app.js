@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const express = require('express');
 const mysql = require('mysql2');
 const session = require('express-session');
@@ -8,9 +6,7 @@ const multer = require('multer');
 
 const app = express();
 
-// ==================================================
 // DATABASE CONNECTION
-// ==================================================
 
 const db = mysql.createConnection({
   host: 'c237-marlina-mysql.mysql.database.azure.com',
@@ -30,9 +26,7 @@ db.connect((err) => {
   console.log('Connected to database');
 });
 
-// ==================================================
 // APP SETUP
-// ==================================================
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -49,9 +43,7 @@ app.use(session({
 
 app.use(flash());
 
-// ==================================================
 // IMAGE UPLOAD SETUP
-// ==================================================
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -67,9 +59,7 @@ const upload = multer({
   storage: storage
 });
 
-// ==================================================
 // PERSON A — REGISTRATION, LOGIN AND ACCESS CONTROL
-// ==================================================
 
 const checkAuthenticated = (req, res, next) => {
   if (req.session.user) {
@@ -98,7 +88,6 @@ const checkRole = (role) => {
   };
 };
 
-// Existing accounts with role "user" are treated as buyers.
 const checkBuyer = (req, res, next) => {
   if (
     req.session.user &&
@@ -118,17 +107,17 @@ const checkBuyer = (req, res, next) => {
   res.redirect('/products');
 };
 
-// Add the seller username to every product.
-// This uses SELECT queries, arrays, loops and if statements.
+// Add seller usernames to the products.
+// Uses SELECT, arrays, loops and if statements.
 const addSellerNames = (products, callback) => {
-  const userSql = `
+  const sql = `
     SELECT user_id, username
     FROM users
   `;
 
-  db.query(userSql, (userError, users) => {
-    if (userError) {
-      return callback(userError);
+  db.query(sql, (error, users) => {
+    if (error) {
+      return callback(error);
     }
 
     for (let i = 0; i < products.length; i++) {
@@ -200,7 +189,11 @@ app.post('/register', (req, res) => {
     role === 'admin' &&
     adminKey !== 'C237_AdminKey'
   ) {
-    req.flash('error', 'Invalid Admin Key.');
+    req.flash(
+      'error',
+      'Invalid Admin Key.'
+    );
+
     req.flash('formData', req.body);
     return res.redirect('/register');
   }
@@ -288,7 +281,10 @@ app.post('/login', (req, res) => {
     [email, password],
     (err, results) => {
       if (err) {
-        console.error('Login error:', err);
+        console.error(
+          'Login error:',
+          err
+        );
 
         req.flash(
           'error',
@@ -313,7 +309,7 @@ app.post('/login', (req, res) => {
   );
 });
 
-// Display the correct dashboard based on role
+// Display dashboard based on role
 app.get(
   '/dashboard',
   checkAuthenticated,
@@ -383,12 +379,9 @@ app.get('/logout', (req, res) => {
   });
 });
 
-// ==================================================
 // PERSON B — ADDING NEW PRODUCT INFORMATION
-// Sellers can add listings.
-// ==================================================
 
-// Display add product form
+// Display add-product form
 app.get(
   '/products/new',
   checkAuthenticated,
@@ -420,6 +413,22 @@ app.post(
       delivery_method,
       meetup_location
     } = req.body;
+
+    if (
+      !name ||
+      !category ||
+      !condition_type ||
+      !quantity ||
+      !price ||
+      !delivery_method
+    ) {
+      req.flash(
+        'error',
+        'Please complete all required product fields.'
+      );
+
+      return res.redirect('/products/new');
+    }
 
     let finalCategory = category;
 
@@ -490,17 +499,17 @@ app.post(
   }
 );
 
-// ==================================================
 // PERSON C — VIEWING AND DISPLAYING PRODUCT INFORMATION
-// All logged-in roles can view products.
-// ==================================================
 
 // Display all products
 app.get(
   '/products',
   checkAuthenticated,
   (req, res) => {
-    const sql = 'SELECT * FROM products';
+    const sql = `
+      SELECT *
+      FROM products
+    `;
 
     db.query(sql, (err, results) => {
       if (err) {
@@ -545,7 +554,7 @@ app.get(
   }
 );
 
-// Display one product by ID
+// Display one product
 app.get(
   '/product/:id',
   checkAuthenticated,
@@ -606,12 +615,9 @@ app.get(
   }
 );
 
-// ==================================================
 // PERSON D — EDITING EXISTING PRODUCT INFORMATION
-// Only a seller who owns the product can edit it.
-// ==================================================
 
-// Display edit product form
+// Only the seller who owns the product can open the edit form
 app.get(
   '/editProduct/:id',
   checkAuthenticated,
@@ -670,7 +676,7 @@ app.get(
   }
 );
 
-// Update product in database
+// Only the seller who owns the product can update it
 app.post(
   '/editProduct/:id',
   checkAuthenticated,
@@ -750,7 +756,9 @@ app.post(
 
         let image = req.body.currentImage;
 
-        if (req.body.removeImage === 'yes') {
+        if (
+          req.body.removeImage === 'yes'
+        ) {
           image = null;
         } else if (req.file) {
           image = req.file.filename;
@@ -815,11 +823,9 @@ app.post(
   }
 );
 
-// ==================================================
 // PERSON E — REMOVING PRODUCT INFORMATION
-// Only administrators can delete products.
-// ==================================================
 
+// Only admins can delete products
 app.get(
   '/deleteProduct/:id',
   checkAuthenticated,
@@ -827,19 +833,19 @@ app.get(
   (req, res) => {
     const productId = req.params.id;
 
-    const deleteSql = `
+    const sql = `
       DELETE FROM products
       WHERE product_id = ?
     `;
 
     db.query(
-      deleteSql,
+      sql,
       [productId],
-      (deleteError) => {
-        if (deleteError) {
+      (error) => {
+        if (error) {
           console.error(
             'Error deleting product:',
-            deleteError
+            error
           );
 
           req.flash(
@@ -861,12 +867,9 @@ app.get(
   }
 );
 
-// ==================================================
 // PERSON F — SEARCHING AND FILTERING PRODUCT INFORMATION
-// Search and listings are displayed on products.ejs.
-// ==================================================
 
-// The separate search page is no longer needed.
+// The search form is displayed inside products.ejs
 app.get(
   '/searchProducts',
   checkAuthenticated,
@@ -875,18 +878,19 @@ app.get(
   }
 );
 
-// Process search and category filter
+// Exact product-name search and category filter
 app.post(
   '/searchProducts',
   checkAuthenticated,
   (req, res) => {
-    const searchName =
-      req.body.searchName || '';
+    const searchName = req.body.searchName;
+    const searchCategory = req.body.searchCategory;
 
-    const searchCategory =
-      req.body.searchCategory || '';
+    let sql = `
+      SELECT *
+      FROM products
+    `;
 
-    let sql = 'SELECT * FROM products';
     let values = [];
 
     if (
@@ -970,11 +974,9 @@ app.post(
   }
 );
 
-// ==================================================
 // BUYER CART
-// Buyers can add products to a session cart.
-// ==================================================
 
+// Add a product to the buyer's session cart
 app.post(
   '/cart/add/:id',
   checkAuthenticated,
@@ -1083,16 +1085,10 @@ app.get(
   }
 );
 
-// ==================================================
 // SERVER
-// ==================================================
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
+app.listen(3000, () => {
   console.log(
-    'ResellVault running on port http://localhost:' +
-    PORT +
-    '/'
+    'ResellVault running on port http://localhost:3000/'
   );
 });

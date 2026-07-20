@@ -1,11 +1,23 @@
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  rel="stylesheet">
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+
   <div class="container-fluid">
-    <a class="navbar-brand" href="/">
+
+    <a
+      class="navbar-brand"
+      href="/">
+
       ResellVault
+
     </a>
 
     <% if (user) { %>
+
       <div class="mx-auto navbar-search">
+
         <form
           class="d-flex"
           action="/searchProducts"
@@ -15,7 +27,7 @@
             class="form-control me-2"
             type="text"
             name="searchName"
-            placeholder="Search exact product name">
+            placeholder="Search product name">
 
           <input
             type="hidden"
@@ -25,42 +37,94 @@
           <button
             class="btn btn-primary"
             type="submit">
+
             Search
+
           </button>
+
         </form>
+
       </div>
+
     <% } %>
 
     <div class="ms-auto">
+
       <% if (user) { %>
+
         <span class="text-light me-3">
           Hello, <%= user.username %>
         </span>
 
+        <% if (
+          user.role === 'buyer' ||
+          user.role === 'user'
+        ) { %>
+
+          <a
+            href="/cart"
+            class="btn btn-success me-2">
+
+            Cart
+
+          </a>
+
+        <% } %>
+
         <a
           href="/dashboard"
           class="btn btn-outline-light me-2">
+
           Dashboard
+
         </a>
 
         <a
           href="/logout"
           class="btn btn-danger">
+
           Logout
+
         </a>
+
       <% } else { %>
+
         <a
           href="/login"
           class="btn btn-outline-light me-2">
+
           Login
+
         </a>
 
         <a
           href="/register"
           class="btn btn-primary">
+
           Register
+
         </a>
+
       <% } %>
+
     </div>
+
   </div>
+
 </nav>
+
+<style>
+
+  .navbar-search {
+    width: 50%;
+  }
+
+  @media screen and (max-width: 768px) {
+
+    .navbar-search {
+      width: 40%;
+    }
+
+  }
+
+</style>

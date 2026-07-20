@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0">
@@ -25,18 +26,6 @@
 
   <div class="content">
 
-    <% if (messages && messages.length > 0) { %>
-      <div class="alert alert-success">
-        <%= messages[0] %>
-      </div>
-    <% } %>
-
-    <% if (errors && errors.length > 0) { %>
-      <div class="alert alert-danger">
-        <%= errors[0] %>
-      </div>
-    <% } %>
-
     <div class="page-section">
 
       <h1>
@@ -53,7 +42,6 @@
 
               <tr>
                 <th>Name</th>
-                <th>Image</th>
                 <th>Seller</th>
                 <th>Price</th>
               </tr>
@@ -68,23 +56,6 @@
 
                   <td>
                     <%= cart[i].name %>
-                  </td>
-
-                  <td>
-
-                    <% if (cart[i].image) { %>
-
-                      <img
-                        src="/images/<%= cart[i].image %>"
-                        alt="<%= cart[i].name %>"
-                        class="product-image">
-
-                    <% } else { %>
-
-                      No image
-
-                    <% } %>
-
                   </td>
 
                   <td>

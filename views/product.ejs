@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0">
@@ -24,18 +25,6 @@
   <%- include('partials/sidebar') %>
 
   <div class="content">
-
-    <% if (messages && messages.length > 0) { %>
-      <div class="alert alert-success">
-        <%= messages[0] %>
-      </div>
-    <% } %>
-
-    <% if (errors && errors.length > 0) { %>
-      <div class="alert alert-danger">
-        <%= errors[0] %>
-      </div>
-    <% } %>
 
     <div class="page-section">
 
@@ -98,28 +87,6 @@
       </p>
 
       <% if (
-        user.role === 'buyer' ||
-        user.role === 'user'
-      ) { %>
-
-        <form
-          action="/cart/add/<%= product.product_id %>"
-          method="POST"
-          class="d-inline">
-
-          <button
-            type="submit"
-            class="btn btn-success">
-
-            Add to Cart
-
-          </button>
-
-        </form>
-
-      <% } %>
-
-      <% if (
         user.role === 'seller' &&
         product.seller_id == user.user_id
       ) { %>
@@ -144,6 +111,28 @@
           Delete
 
         </a>
+
+      <% } %>
+
+      <% if (
+        user.role === 'buyer' ||
+        user.role === 'user'
+      ) { %>
+
+        <form
+          action="/cart/add/<%= product.product_id %>"
+          method="POST"
+          class="d-inline">
+
+          <button
+            type="submit"
+            class="btn btn-success">
+
+            Add to Cart
+
+          </button>
+
+        </form>
 
       <% } %>
 

@@ -48,6 +48,11 @@
       <label>Current Image:</label><br>
       <input type="text" name="currentImage" value="<%= product.image %>" readonly><br>
       <img src="/images/<%= product.image %>" width="150"><br><br>
+
+      <label>
+      <input type="checkbox" name="removeImage" value="yes"> Remove current image
+      </label><br><br>
+      
       <label>New Image (optional):</label><br>
       <input type="file" name="image" accept="image/*"><br><br>
       <button type="submit">Update Product</button>

@@ -608,11 +608,12 @@ app.post(
             finalCategory = category_other.trim();
         }
 
-        let image = req.body.currentImage;
-
-        if (req.file) {
-            image = req.file.filename;
-        }
+  let image = req.body.currentImage;
+  if (req.body.removeImage === 'yes') {
+  image = null;
+} else if (req.file) {
+  image = req.file.filename;
+}
 
         const sql = `
             UPDATE products

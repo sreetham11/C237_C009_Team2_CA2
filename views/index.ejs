@@ -1,14 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ResellVault - Home</title>
 
   <link
@@ -16,223 +10,103 @@
     rel="stylesheet">
 
   <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    href="/style.css"
     rel="stylesheet">
-
-  <style>
-
-    body {
-      background-color: #f5f5f5;
-    }
-
-    .content {
-      margin-left: 200px;
-      padding: 90px 30px 30px;
-    }
-
-    .welcome-section {
-      background-color: white;
-      padding: 35px;
-      border-radius: 10px;
-      margin-bottom: 25px;
-    }
-
-    .feature-card {
-      background-color: white;
-      padding: 25px;
-      border-radius: 10px;
-      height: 100%;
-    }
-
-  </style>
-
 </head>
-
 <body>
-
-  <!-- Navbar -->
   <%- include('partials/navbar') %>
-
-  <!-- Sidebar -->
   <%- include('partials/sidebar') %>
 
-  <!-- Main content -->
   <div class="content">
-
     <% if (messages && messages.length > 0) { %>
-
       <div class="alert alert-success">
-
         <% for (let i = 0; i < messages.length; i++) { %>
-
-          <p class="mb-0">
-            <%= messages[i] %>
-          </p>
-
+          <p class="mb-0"><%= messages[i] %></p>
         <% } %>
-
       </div>
-
     <% } %>
-
 
     <% if (errors && errors.length > 0) { %>
-
       <div class="alert alert-danger">
-
         <% for (let i = 0; i < errors.length; i++) { %>
-
-          <p class="mb-0">
-            <%= errors[i] %>
-          </p>
-
+          <p class="mb-0"><%= errors[i] %></p>
         <% } %>
-
       </div>
-
     <% } %>
 
-
-    <div class="welcome-section">
-
+    <div class="page-section">
       <h1>Welcome to ResellVault</h1>
 
       <p class="lead">
-        Buy, sell and manage trading cards, collectibles
-        and clothing in one place.
+        Buy, sell and manage trading cards, collectibles and clothing in one place.
       </p>
 
       <% if (user) { %>
-
         <a
           href="/products"
           class="btn btn-primary me-2">
-
           View Listings
+        </a>
 
+        <a
+          href="/searchProducts"
+          class="btn btn-outline-primary me-2">
+          Search Products
         </a>
 
         <% if (user.role === 'seller') { %>
-
           <a
             href="/products/new"
             class="btn btn-success">
-
             Add Product
-
           </a>
-
         <% } %>
-
       <% } else { %>
-
         <a
           href="/register"
           class="btn btn-primary me-2">
-
           Create Account
-
         </a>
 
         <a
           href="/login"
           class="btn btn-outline-dark">
-
           Login
-
         </a>
-
       <% } %>
-
     </div>
-
 
     <div class="row">
-
       <div class="col-md-4 mb-3">
-
-        <div class="feature-card">
-
-          <h3>
-            <i class="bi bi-search"></i>
-            Find Products
-          </h3>
-
-          <p>
-            Search and filter listings by product name
-            or category.
-          </p>
-
-          <a
-            href="/searchProducts"
-            class="btn btn-outline-primary">
-
+        <div class="page-section h-100">
+          <h3>Find Products</h3>
+          <p>Search and filter listings by product name or category.</p>
+          <a href="/searchProducts" class="btn btn-outline-primary">
             Search Products
-
           </a>
-
         </div>
-
       </div>
 
-
       <div class="col-md-4 mb-3">
-
-        <div class="feature-card">
-
-          <h3>
-            <i class="bi bi-box-seam"></i>
-            Browse Listings
-          </h3>
-
-          <p>
-            View available trading cards, collectibles
-            and clothing.
-          </p>
-
-          <a
-            href="/products"
-            class="btn btn-outline-primary">
-
+        <div class="page-section h-100">
+          <h3>Browse Listings</h3>
+          <p>View available trading cards, collectibles and clothing.</p>
+          <a href="/products" class="btn btn-outline-primary">
             View Listings
-
           </a>
-
         </div>
-
       </div>
-
 
       <div class="col-md-4 mb-3">
-
-        <div class="feature-card">
-
-          <h3>
-            <i class="bi bi-person-circle"></i>
-            Your Account
-          </h3>
-
-          <p>
-            Access your account dashboard and manage
-            your ResellVault activity.
-          </p>
-
-          <a
-            href="/dashboard"
-            class="btn btn-outline-primary">
-
+        <div class="page-section h-100">
+          <h3>Your Account</h3>
+          <p>Access your dashboard and manage your ResellVault activity.</p>
+          <a href="/dashboard" class="btn btn-outline-primary">
             Open Dashboard
-
           </a>
-
         </div>
-
       </div>
-
     </div>
-
   </div>
-
 </body>
-
 </html>

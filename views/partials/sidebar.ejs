@@ -1,71 +1,25 @@
-<link
-  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-  rel="stylesheet">
-
-<style>
-
-  .sidebar {
-    position: fixed;
-    top: 56px;
-    left: 0;
-    width: 200px;
-    height: 100vh;
-    padding-top: 20px;
-    background-color: #343a40;
-    z-index: 1000;
-  }
-
-  .sidebar a {
-    display: flex;
-    align-items: center;
-    padding: 12px 20px;
-    text-decoration: none;
-    color: white;
-  }
-
-  .sidebar a:hover {
-    background-color: #495057;
-  }
-
-  .sidebar i {
-    width: 25px;
-    font-size: 16px;
-  }
-
-</style>
-
 <div class="sidebar">
-
   <a href="/">
-
-    <i class="bi bi-house-door-fill"></i>
-
-    <span>Home</span>
-
+    Home
   </a>
 
-  <a href="/products">
+  <% if (user) { %>
+    <a href="/products">
+      Listings
+    </a>
 
-    <i class="bi bi-card-list"></i>
+    <a href="/searchProducts">
+      Search Products
+    </a>
 
-    <span>Listings</span>
+    <a href="/dashboard">
+      Dashboard
+    </a>
 
-  </a>
-
-  <a href="/searchProducts">
-
-    <i class="bi bi-search"></i>
-
-    <span>Search Products</span>
-
-  </a>
-
-  <a href="/dashboard">
-
-    <i class="bi bi-speedometer2"></i>
-
-    <span>Dashboard</span>
-
-  </a>
-
+    <% if (user.role === 'seller') { %>
+      <a href="/products/new">
+        Add Product
+      </a>
+    <% } %>
+  <% } %>
 </div>

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const session = require('express-session');
@@ -11,7 +12,7 @@ const app = express();
 const db = mysql.createConnection({
   host: 'c237-marlina-mysql.mysql.database.azure.com',
   user: 'c237_009',
-  password: 'YOUR_DATABASE_PASSWORD',
+  password: process.env.DB_PASSWORD,
   database: 'C237_009_team2_resellvault',
   ssl: {
     rejectUnauthorized: false

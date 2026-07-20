@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const session = require('express-session');
@@ -11,7 +12,7 @@ const app = express();
 const db = mysql.createConnection({
   host: 'c237-marlina-mysql.mysql.database.azure.com',
   user: 'c237_009',
-  password: 'c237009@2026!',
+  password: process.env.DB_PASSWORD,
   database: 'C237_009_team2_resellvault',
   ssl: {
     rejectUnauthorized: false
@@ -533,11 +534,12 @@ app.post(
           finalCategory = category_other;
         }
 
-        let image = req.body.currentImage;
-
-        if (req.file) {
-          image = req.file.filename;
-        }
+  let image = req.body.currentImage;
+  if (req.body.removeImage === 'yes') {
+  image = null;
+} else if (req.file) {
+  image = req.file.filename;
+}
 
         const sql = `
           UPDATE products

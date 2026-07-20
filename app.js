@@ -59,7 +59,7 @@ const upload = multer({
   storage: storage
 });
 
-// PERSON A — USER REGISTRATION, LOGIN AND ACCESS CONTROL
+// PERSON A — REGISTRATION, LOGIN AND ACCESS CONTROL
 
 const checkAuthenticated = (req, res, next) => {
   if (req.session.user) {
@@ -84,6 +84,7 @@ const checkRole = (role) => {
   };
 };
 
+// Home page
 app.get('/', (req, res) => {
   res.render('index', {
     user: req.session.user,
@@ -92,6 +93,7 @@ app.get('/', (req, res) => {
   });
 });
 
+// Display registration form
 app.get('/register', (req, res) => {
   res.render('register', {
     user: req.session.user,
@@ -101,6 +103,7 @@ app.get('/register', (req, res) => {
   });
 });
 
+// Process registration form
 app.post('/register', (req, res) => {
   const {
     username,
@@ -151,32 +154,23 @@ app.post('/register', (req, res) => {
     password,
     address,
     contact,
-    role || 'user'
+    role || 'buyer'
   ];
 
   db.query(sql, values, (err) => {
     if (err) {
       console.error('Registration error:', err);
-
-      req.flash(
-        'error',
-        'Registration failed. Please try again.'
-      );
-
+      req.flash('error', 'Registration failed. Please try again.');
       req.flash('formData', req.body);
-
       return res.redirect('/register');
     }
 
-    req.flash(
-      'success',
-      'Registration successful! Please log in.'
-    );
-
+    req.flash('success', 'Registration successful! Please log in.');
     res.redirect('/login');
   });
 });
 
+// Display login form
 app.get('/login', (req, res) => {
   res.render('login', {
     user: req.session.user,
@@ -185,11 +179,17 @@ app.get('/login', (req, res) => {
   });
 });
 
+// Process login form
 app.post('/login', (req, res) => {
   const {
     email,
     password
   } = req.body;
+
+  if (!email || !password) {
+    req.flash('error', 'All fields are required.');
+    return res.redirect('/login');
+  }
 
   const sql = `
     SELECT *
@@ -204,12 +204,7 @@ app.post('/login', (req, res) => {
     (err, results) => {
       if (err) {
         console.error('Login error:', err);
-
-        req.flash(
-          'error',
-          'Login failed. Please try again.'
-        );
-
+        req.flash('error', 'Login failed. Please try again.');
         return res.redirect('/login');
       }
 
@@ -217,17 +212,14 @@ app.post('/login', (req, res) => {
         req.session.user = results[0];
         res.redirect('/dashboard');
       } else {
-        req.flash(
-          'error',
-          'Invalid email or password.'
-        );
-
+        req.flash('error', 'Invalid email or password.');
         res.redirect('/login');
       }
     }
   );
 });
 
+// Display the correct dashboard based on role
 app.get(
   '/dashboard',
   checkAuthenticated,
@@ -246,25 +238,15 @@ app.get(
 
       db.query(sql, (err, results) => {
         if (err) {
-          console.error(
-            'Error fetching recent users:',
-            err
-          );
+          console.error('Error retrieving users:', err);
+          req.flash('error', 'Could not load registered users.');
 
-          req.flash(
-            'error',
-            'Could not load recent registrations.'
-          );
-
-          return res.render(
-            'admindashboard',
-            {
-              user: user,
-              messages: req.flash('success'),
-              errors: req.flash('error'),
-              recentUsers: []
-            }
-          );
+          return res.render('admindashboard', {
+            user: user,
+            messages: req.flash('success'),
+            errors: req.flash('error'),
+            recentUsers: []
+          });
         }
 
         res.render('admindashboard', {
@@ -273,6 +255,12 @@ app.get(
           errors: req.flash('error'),
           recentUsers: results
         });
+      });
+    } else if (user.role === 'seller') {
+      res.render('sellerdashboard', {
+        user: user,
+        messages: req.flash('success'),
+        errors: req.flash('error')
       });
     } else {
       res.render('dashboard', {
@@ -284,13 +272,16 @@ app.get(
   }
 );
 
+// Logout
 app.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/');
+  req.session.destroy(() => {
+    res.redirect('/');
+  });
 });
 
-// PERSON B — ADDING NEW INFORMATION TO THE SYSTEM
+// PERSON B — ADDING NEW PRODUCT INFORMATION
 
+// Display add product form
 app.get(
   '/products/new',
   checkAuthenticated,
@@ -304,6 +295,7 @@ app.get(
   }
 );
 
+// Add product to database
 app.post(
   '/products',
   checkAuthenticated,
@@ -354,30 +346,20 @@ app.post(
 
     db.query(sql, values, (err) => {
       if (err) {
-        console.error(
-          'Add product error:',
-          err
-        );
-
-        req.flash(
-          'error',
-          'Could not add product.'
-        );
-
+        console.error('Add product error:', err);
+        req.flash('error', 'Could not add product.');
         return res.redirect('/products/new');
       }
 
-      req.flash(
-        'success',
-        'Product added successfully!'
-      );
-
+      req.flash('success', 'Product added successfully!');
       res.redirect('/products');
     });
   }
 );
 
-// PERSON C — VIEWING AND DISPLAYING INFORMATION
+// PERSON C — VIEWING AND DISPLAYING PRODUCT INFORMATION
+
+// Display all products
 app.get(
   '/products',
   checkAuthenticated,
@@ -386,16 +368,8 @@ app.get(
 
     db.query(sql, (err, results) => {
       if (err) {
-        console.error(
-          'Products query error:',
-          err
-        );
-
-        req.flash(
-          'error',
-          'Could not load products.'
-        );
-
+        console.error('Products query error:', err);
+        req.flash('error', 'Could not load products.');
         return res.redirect('/dashboard');
       }
 
@@ -409,6 +383,7 @@ app.get(
   }
 );
 
+// Display one product by ID
 app.get(
   '/product/:id',
   checkAuthenticated,
@@ -426,33 +401,26 @@ app.get(
       [productId],
       (err, results) => {
         if (err) {
-          console.error(
-            'View product error:',
-            err
-          );
-
-          return res.send(
-            'Error retrieving product'
-          );
+          console.error('View product error:', err);
+          return res.send('Error retrieving product');
         }
 
-        if (results.length === 0) {
-          return res.send(
-            'Product not found'
-          );
+        if (results.length > 0) {
+          res.render('product', {
+            product: results[0],
+            user: req.session.user
+          });
+        } else {
+          res.send('Product not found');
         }
-
-        res.render('product', {
-          product: results[0],
-          user: req.session.user
-        });
       }
     );
   }
 );
 
-// PERSON D — EDITING EXISTING INFORMATION
+// PERSON D — EDITING EXISTING PRODUCT INFORMATION
 
+// Display edit product form
 app.get(
   '/editProduct/:id',
   checkAuthenticated,
@@ -470,41 +438,25 @@ app.get(
       [productId],
       (error, results) => {
         if (error) {
-          console.error(
-            'Database query error:',
-            error.message
-          );
-
-          return res.send(
-            'Error retrieving product by ID'
-          );
+          console.error('Database query error:', error.message);
+          return res.send('Error retrieving product by ID');
         }
 
         if (results.length === 0) {
-          return res.send(
-            'Product not found'
-          );
+          return res.send('Product not found');
         }
 
         const product = results[0];
         const user = req.session.user;
 
-        const isAdmin =
-          user.role === 'admin';
+        const isAdmin = user.role === 'admin';
 
         const isProductOwner =
           user.role === 'seller' &&
           product.seller_id == user.user_id;
 
-        if (
-          !isAdmin &&
-          !isProductOwner
-        ) {
-          req.flash(
-            'error',
-            'You are not allowed to edit this product.'
-          );
-
+        if (!isAdmin && !isProductOwner) {
+          req.flash('error', 'You are not allowed to edit this product.');
           return res.redirect('/products');
         }
 
@@ -517,6 +469,7 @@ app.get(
   }
 );
 
+// Update product in database
 app.post(
   '/editProduct/:id',
   checkAuthenticated,
@@ -536,46 +489,26 @@ app.post(
       [productId],
       (checkError, checkResults) => {
         if (checkError) {
-          console.error(
-            'Error checking product:',
-            checkError
-          );
-
-          req.flash(
-            'error',
-            'Could not check the product.'
-          );
-
+          console.error('Error checking product:', checkError);
+          req.flash('error', 'Could not check the product.');
           return res.redirect('/products');
         }
 
         if (checkResults.length === 0) {
-          req.flash(
-            'error',
-            'Product not found.'
-          );
-
+          req.flash('error', 'Product not found.');
           return res.redirect('/products');
         }
 
         const product = checkResults[0];
 
-        const isAdmin =
-          user.role === 'admin';
+        const isAdmin = user.role === 'admin';
 
         const isProductOwner =
           user.role === 'seller' &&
           product.seller_id == user.user_id;
 
-        if (
-          !isAdmin &&
-          !isProductOwner
-        ) {
-          req.flash(
-            'error',
-            'You are not allowed to edit this product.'
-          );
-
+        if (!isAdmin && !isProductOwner) {
+          req.flash('error', 'You are not allowed to edit this product.');
           return res.redirect('/products');
         }
 
@@ -639,24 +572,12 @@ app.post(
           values,
           (error) => {
             if (error) {
-              console.error(
-                'Error updating product:',
-                error
-              );
-
-              req.flash(
-                'error',
-                'Could not update the product.'
-              );
-
+              console.error('Error updating product:', error);
+              req.flash('error', 'Could not update the product.');
               return res.redirect('/products');
             }
 
-            req.flash(
-              'success',
-              'Product updated successfully!'
-            );
-
+            req.flash('success', 'Product updated successfully!');
             res.redirect('/products');
           }
         );
@@ -665,7 +586,9 @@ app.post(
   }
 );
 
-// PERSON E — REMOVING INFORMATION FROM THE SYSTEM
+// PERSON E — REMOVING PRODUCT INFORMATION
+
+// Delete product after checking role and ownership
 app.get(
   '/deleteProduct/:id',
   checkAuthenticated,
@@ -684,46 +607,26 @@ app.get(
       [productId],
       (checkError, checkResults) => {
         if (checkError) {
-          console.error(
-            'Error checking product before deletion:',
-            checkError
-          );
-
-          req.flash(
-            'error',
-            'Could not check the product.'
-          );
-
+          console.error('Error checking product before deletion:', checkError);
+          req.flash('error', 'Could not check the product.');
           return res.redirect('/products');
         }
 
         if (checkResults.length === 0) {
-          req.flash(
-            'error',
-            'Product not found.'
-          );
-
+          req.flash('error', 'Product not found.');
           return res.redirect('/products');
         }
 
         const product = checkResults[0];
 
-        const isAdmin =
-          user.role === 'admin';
+        const isAdmin = user.role === 'admin';
 
         const isProductOwner =
           user.role === 'seller' &&
           product.seller_id == user.user_id;
 
-        if (
-          !isAdmin &&
-          !isProductOwner
-        ) {
-          req.flash(
-            'error',
-            'You are not allowed to delete this product.'
-          );
-
+        if (!isAdmin && !isProductOwner) {
+          req.flash('error', 'You are not allowed to delete this product.');
           return res.redirect('/products');
         }
 
@@ -737,24 +640,12 @@ app.get(
           [productId],
           (deleteError) => {
             if (deleteError) {
-              console.error(
-                'Error deleting product:',
-                deleteError
-              );
-
-              req.flash(
-                'error',
-                'Could not delete the product.'
-              );
-
+              console.error('Error deleting product:', deleteError);
+              req.flash('error', 'Could not delete the product.');
               return res.redirect('/products');
             }
 
-            req.flash(
-              'success',
-              'Product deleted successfully!'
-            );
-
+            req.flash('success', 'Product deleted successfully!');
             res.redirect('/products');
           }
         );
@@ -763,107 +654,105 @@ app.get(
   }
 );
 
-// PERSON F — SEARCHING, FILTERING OR ORGANISING INFORMATION
+// PERSON F — SEARCHING AND FILTERING PRODUCT INFORMATION
 
-app.get('/searchProducts', (req, res) => {
-  const sql = 'SELECT * FROM products';
+// Display search form and all products
+app.get(
+  '/searchProducts',
+  checkAuthenticated,
+  (req, res) => {
+    const sql = 'SELECT * FROM products';
 
-  db.query(sql, (error, results) => {
-    if (error) {
-      console.error(
-        'Error retrieving products:',
-        error
-      );
-
-      return res.send(
-        'Error retrieving products'
-      );
-    }
-
-    res.render('searchProducts', {
-      products: results,
-      searchName: '',
-      searchCategory: '',
-      user: req.session.user
-    });
-  });
-});
-
-app.post('/searchProducts', (req, res) => {
-  const {
-    searchName,
-    searchCategory
-  } = req.body;
-
-  let sql = 'SELECT * FROM products';
-  let values = [];
-
-  if (
-    searchName &&
-    searchCategory
-  ) {
-    sql = `
-      SELECT *
-      FROM products
-      WHERE name = ?
-      AND category = ?
-    `;
-
-    values = [
-      searchName,
-      searchCategory
-    ];
-  } else if (searchName) {
-    sql = `
-      SELECT *
-      FROM products
-      WHERE name = ?
-    `;
-
-    values = [
-      searchName
-    ];
-  } else if (searchCategory) {
-    sql = `
-      SELECT *
-      FROM products
-      WHERE category = ?
-    `;
-
-    values = [
-      searchCategory
-    ];
-  }
-
-  db.query(
-    sql,
-    values,
-    (error, results) => {
+    db.query(sql, (error, results) => {
       if (error) {
-        console.error(
-          'Error searching products:',
-          error
-        );
-
-        return res.send(
-          'Error searching products'
-        );
+        console.error('Error retrieving products:', error);
+        return res.send('Error retrieving products');
       }
 
       res.render('searchProducts', {
         products: results,
-        searchName: searchName,
-        searchCategory: searchCategory,
+        searchName: '',
+        searchCategory: '',
         user: req.session.user
       });
+    });
+  }
+);
+
+// Process search and category filter
+app.post(
+  '/searchProducts',
+  checkAuthenticated,
+  (req, res) => {
+    const {
+      searchName,
+      searchCategory
+    } = req.body;
+
+    let sql = 'SELECT * FROM products';
+    let values = [];
+
+    if (
+      searchName &&
+      searchCategory
+    ) {
+      sql = `
+        SELECT *
+        FROM products
+        WHERE name = ?
+        AND category = ?
+      `;
+
+      values = [
+        searchName,
+        searchCategory
+      ];
+    } else if (searchName) {
+      sql = `
+        SELECT *
+        FROM products
+        WHERE name = ?
+      `;
+
+      values = [
+        searchName
+      ];
+    } else if (searchCategory) {
+      sql = `
+        SELECT *
+        FROM products
+        WHERE category = ?
+      `;
+
+      values = [
+        searchCategory
+      ];
     }
-  );
-});
+
+    db.query(
+      sql,
+      values,
+      (error, results) => {
+        if (error) {
+          console.error('Error searching products:', error);
+          return res.send('Error searching products');
+        }
+
+        res.render('searchProducts', {
+          products: results,
+          searchName: searchName,
+          searchCategory: searchCategory,
+          user: req.session.user
+        });
+      }
+    );
+  }
+);
 
 // SERVER
 
-app.listen(3000, () => {
-  console.log(
-    'ResellVault running on port http://localhost:3000/'
-  );
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log('ResellVault running on port http://localhost:' + PORT + '/');
 });

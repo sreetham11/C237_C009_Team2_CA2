@@ -138,6 +138,18 @@ const addSellerNames = (products, callback) => {
   });
 };
 
+// Get all products belonging to one seller.
+// Reused by GET /products (Manage Listings) and the Seller Dashboard stats.
+const getSellerProducts = (sellerId, callback) => {
+  const sql = `
+    SELECT *
+    FROM products
+    WHERE seller_id = ?
+  `;
+
+  db.query(sql, [sellerId], callback);
+};
+
 // Home page
 app.get('/', (req, res) => {
   res.render('index', {
@@ -357,10 +369,45 @@ app.get(
         });
       });
     } else if (user.role === 'seller') {
-      res.render('sellerdashboard', {
-        user: user,
-        messages: req.flash('success'),
-        errors: req.flash('error')
+      getSellerProducts(user.user_id, (err, results) => {
+        if (err) {
+          console.error(
+            'Seller stats query error:',
+            err
+          );
+
+          return res.render('sellerdashboard', {
+            user: user,
+            messages: req.flash('success'),
+            errors: req.flash('error'),
+            listingCount: 0,
+            totalQuantity: 0,
+            totalValue: 0
+          });
+        }
+
+        let totalQuantity = 0;
+        let totalValue = 0;
+
+        for (let i = 0; i < results.length; i++) {
+          totalQuantity =
+            totalQuantity +
+            Number(results[i].quantity);
+
+          totalValue =
+            totalValue +
+            (Number(results[i].price) *
+              Number(results[i].quantity));
+        }
+
+        res.render('sellerdashboard', {
+          user: user,
+          messages: req.flash('success'),
+          errors: req.flash('error'),
+          listingCount: results.length,
+          totalQuantity: totalQuantity,
+          totalValue: totalValue
+        });
       });
     } else {
       res.render('dashboard', {
@@ -369,6 +416,61 @@ app.get(
         errors: req.flash('error')
       });
     }
+  }
+);
+
+// Upload/replace the logged-in user's profile picture
+app.post(
+  '/profile/picture',
+  checkAuthenticated,
+  upload.single('image'),
+  (req, res) => {
+    if (!req.file) {
+      req.flash(
+        'error',
+        'Please choose an image to upload.'
+      );
+
+      return res.redirect('/dashboard');
+    }
+
+    const userId = req.session.user.user_id;
+    const image = req.file.filename;
+
+    const sql = `
+      UPDATE users
+      SET profile_picture = ?
+      WHERE user_id = ?
+    `;
+
+    db.query(
+      sql,
+      [image, userId],
+      (err) => {
+        if (err) {
+          console.error(
+            'Profile picture update error:',
+            err
+          );
+
+          req.flash(
+            'error',
+            'Could not update profile picture.'
+          );
+
+          return res.redirect('/dashboard');
+        }
+
+        req.session.user.profile_picture = image;
+
+        req.flash(
+          'success',
+          'Profile picture updated!'
+        );
+
+        res.redirect('/dashboard');
+      }
+    );
   }
 );
 
@@ -504,14 +606,10 @@ app.post(
 // Display all products
 app.get(
   '/products',
-  checkAuthenticated,
   (req, res) => {
-    const sql = `
-      SELECT *
-      FROM products
-    `;
+    const myListings = req.query.myListings === 'true';
 
-    db.query(sql, (err, results) => {
+    const handleProductResults = (err, results) => {
       if (err) {
         console.error(
           'Products query error:',
@@ -550,14 +648,27 @@ app.get(
           });
         }
       );
-    });
+    };
+
+    if (myListings && req.session.user) {
+      getSellerProducts(
+        req.session.user.user_id,
+        handleProductResults
+      );
+    } else {
+      const sql = `
+        SELECT *
+        FROM products
+      `;
+
+      db.query(sql, handleProductResults);
+    }
   }
 );
 
 // Display one product
 app.get(
   '/product/:id',
-  checkAuthenticated,
   (req, res) => {
     const productId = req.params.id;
 
@@ -872,7 +983,6 @@ app.get(
 // The search form is displayed inside products.ejs
 app.get(
   '/searchProducts',
-  checkAuthenticated,
   (req, res) => {
     res.redirect('/products');
   }
@@ -881,7 +991,6 @@ app.get(
 // Exact product-name search and category filter
 app.post(
   '/searchProducts',
-  checkAuthenticated,
   (req, res) => {
     const searchName = req.body.searchName;
     const searchCategory = req.body.searchCategory;

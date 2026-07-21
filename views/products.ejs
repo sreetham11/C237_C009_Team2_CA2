@@ -64,7 +64,7 @@
         Product Listings
       </h1>
 
-      <h2 class="h4 mt-4">
+      <h2 id="search-form" class="h4 mt-4">
         Search and Filter
       </h2>
 
@@ -291,6 +291,7 @@
                   <td>
 
                     <% if (
+                      user &&
                       user.role === 'seller' &&
                       products[i].seller_id == user.user_id
                     ) { %>
@@ -313,7 +314,7 @@
 
                   <td>
 
-                    <% if (user.role === 'admin') { %>
+                    <% if (user && user.role === 'admin') { %>
 
                       <a
                         href="/deleteProduct/<%= products[i].product_id %>"
@@ -335,8 +336,9 @@
                   <td>
 
                     <% if (
-                      user.role === 'buyer' ||
-                      user.role === 'user'
+                      user &&
+                      (user.role === 'buyer' ||
+                      user.role === 'user')
                     ) { %>
 
                       <form

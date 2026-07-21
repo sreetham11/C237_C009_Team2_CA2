@@ -269,10 +269,15 @@ a:hover {
   margin-bottom: 25px;
 }
 
+#search-form {
+  scroll-margin-top: calc(var(--navbar-height) + 20px);
+}
+
 .page-section.hoverable,
 .product-card,
 .feature-card,
-.step-card {
+.step-card,
+.info-card {
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -350,6 +355,83 @@ input[type="checkbox"] {
   width: 17px;
   height: 17px;
   accent-color: var(--accent-dark);
+}
+
+.condition-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.condition-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: #f9f9f8;
+  border: 1px solid #d3d3d3;
+  border-radius: 4px;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.condition-option:hover {
+  border-color: #a7a7a7;
+}
+
+.condition-option:has(input:checked) {
+  background-color: rgba(199, 255, 47, 0.12);
+  border-color: var(--accent-dark);
+}
+
+.condition-option input[type="radio"] {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.condition-option label {
+  margin: 0;
+  cursor: pointer;
+}
+
+.condition-option-desc {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+
+/* ==================================================
+   HOME — HERO
+   ================================================== */
+
+.hero-heading {
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+.hero-heading .accent-text {
+  color: var(--accent-dark);
+}
+
+.hero-heading-icon {
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  margin-left: 0.14em;
+  color: var(--accent);
+  vertical-align: 0.08em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 
@@ -478,6 +560,121 @@ input[type="checkbox"] {
 
 
 /* ==================================================
+   CATEGORY PILLS
+   ================================================== */
+
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.category-pills form {
+  display: inline-block;
+  margin: 0;
+}
+
+.category-pill {
+  display: inline-block;
+  padding: 13px 27px;
+  color: var(--black);
+  background-color: rgba(199, 255, 47, 0.14);
+  border: 1px solid rgba(130, 169, 0, 0.35);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 850;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.category-pill:hover {
+  color: var(--black);
+  background-color: var(--accent);
+  border-color: var(--accent);
+  box-shadow:
+    0 10px 24px rgba(130, 169, 0, 0.28);
+  transform: translateY(-3px);
+}
+
+
+/* ==================================================
+   HOME — INFO CARDS
+   ================================================== */
+
+.home-cards-row {
+  margin-top: 14px;
+}
+
+.info-card {
+  display: flex;
+  flex-direction: column;
+  padding: 38px 34px;
+  border-color: var(--border);
+}
+
+.info-card:hover {
+  box-shadow: var(--shadow-large);
+}
+
+.info-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 20px;
+  color: var(--black);
+  background-color: rgba(199, 255, 47, 0.18);
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.info-card-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.info-card:hover .info-card-icon {
+  transform: scale(1.08);
+}
+
+.info-card h3 {
+  margin-bottom: 10px;
+}
+
+.info-card p {
+  flex-grow: 1;
+  margin-bottom: 0;
+}
+
+.info-card-highlight {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.info-card-highlight strong {
+  color: var(--accent-dark);
+  font-weight: 900;
+}
+
+
+/* ==================================================
    TABLES
    ================================================== */
 
@@ -560,10 +757,123 @@ input[type="checkbox"] {
   box-shadow: var(--shadow-medium);
 }
 
+.product-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 380px);
+  height: 320px;
+  color: var(--text-muted);
+  background-color: #eeeeec;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+
+/* ==================================================
+   PRODUCT DETAIL PAGE
+   ================================================== */
+
+.product-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 380px) 1fr;
+  gap: 42px;
+  align-items: start;
+}
+
+.product-detail-media {
+  display: flex;
+  justify-content: center;
+}
+
+.product-price-block {
+  margin: 14px 0 26px;
+}
+
+.product-price-label {
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.product-price {
+  color: var(--black);
+  font-size: clamp(1.9rem, 2.8vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.product-detail-list {
+  margin: 0;
+}
+
+.product-detail-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.product-detail-row:last-child {
+  border-bottom: 0;
+}
+
+.product-detail-row dt {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.product-detail-row dd {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.product-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
 
 /* ==================================================
    PROFILE AND DASHBOARD
    ================================================== */
+
+.stat-card {
+  padding: 30px 26px;
+  text-align: center;
+}
+
+.stat-card-value {
+  color: var(--black);
+  font-size: clamp(1.8rem, 2.4vw, 2.4rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.stat-card-label {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.stat-empty {
+  text-align: center;
+}
 
 .profile-pic {
   width: 125px;
@@ -573,6 +883,53 @@ input[type="checkbox"] {
   border: 5px solid var(--accent);
   border-radius: 50%;
   box-shadow: var(--shadow-medium);
+}
+
+.profile-pic-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-pic-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--black);
+  background-color: var(--accent);
+  border: 2px solid var(--white);
+  border-radius: 50%;
+  box-shadow: var(--shadow-small);
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.profile-pic-edit-btn:hover {
+  background-color: var(--accent-hover);
+  transform: scale(1.06);
+}
+
+.profile-pic-edit-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.profile-pic-form {
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .feature-card,
@@ -804,6 +1161,16 @@ input[type="checkbox"] {
 
   .table {
     min-width: 900px;
+  }
+
+  .product-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .product-detail-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 
 }

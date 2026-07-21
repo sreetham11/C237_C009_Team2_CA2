@@ -38,10 +38,7 @@
       <h1>Buyer Dashboard</h1>
       <p>Welcome, <%= user.username %> (<%= user.role %>)</p>
 
-      <img
-        src="/images/default-pfp.png"
-        alt="Profile Picture"
-        class="profile-pic mt-3">
+      <%- include('partials/profile-picture') %>
 
       <div class="mt-4">
         <a href="/products" class="btn btn-primary me-2">

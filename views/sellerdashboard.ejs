@@ -38,25 +38,66 @@
       <h1>Seller Dashboard</h1>
       <p>Welcome, <%= user.username %> (<%= user.role %>)</p>
 
-      <img
-        src="/images/default-pfp.png"
-        alt="Profile Picture"
-        class="profile-pic mt-3">
+      <%- include('partials/profile-picture') %>
 
       <div class="mt-4">
-        <a href="/products/new" class="btn btn-success me-2">
-          Add Product
-        </a>
-
-        <a href="/products" class="btn btn-primary me-2">
+        <a href="/products?myListings=true" class="btn btn-primary">
           Manage Listings
-        </a>
-
-        <a href="/searchProducts" class="btn btn-outline-primary">
-          Search Products
         </a>
       </div>
     </div>
+
+    <% if (listingCount === 0) { %>
+
+      <div class="page-section stat-empty mt-4">
+        <p class="mb-3">
+          No listings yet. Add your first product to get started.
+        </p>
+
+        <a href="/products/new" class="btn btn-success">
+          Add Product
+        </a>
+      </div>
+
+    <% } else { %>
+
+      <div class="row g-4 mt-4">
+        <div class="col-md-4">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              <%= listingCount %>
+            </div>
+            <div class="stat-card-label">
+              Active Listings
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              <%= totalQuantity %>
+            </div>
+            <div class="stat-card-label">
+              Total Inventory Quantity
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              $<%= totalValue.toFixed(2) %>
+            </div>
+            <div class="stat-card-label">
+              Total Inventory Value
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <% } %>
+
   </div>
 </body>
 </html>

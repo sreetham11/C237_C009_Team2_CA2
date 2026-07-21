@@ -28,121 +28,151 @@
 
     <div class="page-section">
 
-      <h1>
-        <%= product.name %>
-      </h1>
+      <div class="product-detail-grid">
 
-      <% if (product.image) { %>
+        <div class="product-detail-media">
 
-        <img
-          src="/images/<%= product.image %>"
-          alt="<%= product.name %>"
-          width="250"
-          class="mb-3">
+          <% if (product.image) { %>
 
-      <% } else { %>
+            <img
+              src="/images/<%= product.image %>"
+              alt="<%= product.name %>"
+              class="product-image-large">
 
-        <p>No image</p>
+          <% } else { %>
 
-      <% } %>
+            <div class="product-image-placeholder">
+              No image
+            </div>
 
-      <p>
-        <strong>Enlisted By:</strong>
-        <%= product.seller_name %>
-      </p>
+          <% } %>
 
-      <p>
-        <strong>Description:</strong>
-        <%= product.description %>
-      </p>
+        </div>
 
-      <p>
-        <strong>Category:</strong>
-        <%= product.category %>
-      </p>
+        <div class="product-detail-info">
 
-      <p>
-        <strong>Condition:</strong>
-        <%= product.condition_type %>
-      </p>
+          <h1>
+            <%= product.name %>
+          </h1>
 
-      <p>
-        <strong>Quantity:</strong>
-        <%= product.quantity %>
-      </p>
+          <div class="product-price-block">
 
-      <p>
-        <strong>Price:</strong>
-        $<%= product.price %>
-      </p>
+            <span class="badge-accent product-price-label">
+              Price
+            </span>
 
-      <p>
-        <strong>Delivery Method:</strong>
-        <%= product.delivery_method %>
-      </p>
+            <div class="product-price">
+              $<%= product.price %>
+            </div>
 
-      <p>
-        <strong>Meet-up Location:</strong>
-        <%= product.meetup_location %>
-      </p>
+          </div>
 
-      <% if (
-        user.role === 'seller' &&
-        product.seller_id == user.user_id
-      ) { %>
+          <dl class="product-detail-list">
 
-        <a
-          href="/editProduct/<%= product.product_id %>"
-          class="btn btn-warning">
+            <div class="product-detail-row">
+              <dt>Enlisted By</dt>
+              <dd><%= product.seller_name %></dd>
+            </div>
 
-          Edit
+            <div class="product-detail-row">
+              <dt>Description</dt>
+              <dd><%= product.description %></dd>
+            </div>
 
-        </a>
+            <div class="product-detail-row">
+              <dt>Category</dt>
+              <dd><%= product.category %></dd>
+            </div>
 
-      <% } %>
+            <div class="product-detail-row">
+              <dt>Condition</dt>
+              <dd><%= product.condition_type %></dd>
+            </div>
 
-      <% if (user.role === 'admin') { %>
+            <div class="product-detail-row">
+              <dt>Quantity</dt>
+              <dd><%= product.quantity %></dd>
+            </div>
 
-        <a
-          href="/deleteProduct/<%= product.product_id %>"
-          class="btn btn-danger"
-          onclick="return confirm('Are you sure you want to delete this product?')">
+            <div class="product-detail-row">
+              <dt>Delivery Method</dt>
+              <dd><%= product.delivery_method %></dd>
+            </div>
 
-          Delete
+            <div class="product-detail-row">
+              <dt>Meet-up Location</dt>
+              <dd><%= product.meetup_location %></dd>
+            </div>
 
-        </a>
+          </dl>
 
-      <% } %>
+          <div class="product-detail-actions">
 
-      <% if (
-        user.role === 'buyer' ||
-        user.role === 'user'
-      ) { %>
+            <% if (
+              user &&
+              user.role === 'seller' &&
+              product.seller_id == user.user_id
+            ) { %>
 
-        <form
-          action="/cart/add/<%= product.product_id %>"
-          method="POST"
-          class="d-inline">
+              <a
+                href="/editProduct/<%= product.product_id %>"
+                class="btn btn-warning">
 
-          <button
-            type="submit"
-            class="btn btn-success">
+                Edit
 
-            Add to Cart
+              </a>
 
-          </button>
+            <% } %>
 
-        </form>
+            <% if (user && user.role === 'admin') { %>
 
-      <% } %>
+              <a
+                href="/deleteProduct/<%= product.product_id %>"
+                class="btn btn-danger"
+                onclick="return confirm('Are you sure you want to delete this product?')">
 
-      <a
-        href="/products"
-        class="btn btn-secondary">
+                Delete
 
-        Back to Listings
+              </a>
 
-      </a>
+            <% } %>
+
+            <% if (
+              user &&
+              (user.role === 'buyer' ||
+              user.role === 'user')
+            ) { %>
+
+              <form
+                action="/cart/add/<%= product.product_id %>"
+                method="POST"
+                class="d-inline">
+
+                <button
+                  type="submit"
+                  class="btn btn-success">
+
+                  Add to Cart
+
+                </button>
+
+              </form>
+
+            <% } %>
+
+            <a
+              href="/products"
+              class="btn btn-secondary">
+
+              Back to Listings
+
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
 
     </div>
 

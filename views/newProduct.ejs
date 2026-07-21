@@ -139,30 +139,7 @@
             Condition
           </label>
 
-          <div>
-
-            <input
-              type="radio"
-              id="conditionNew"
-              name="condition_type"
-              value="new"
-              required>
-
-            <label for="conditionNew" class="me-3">
-              New
-            </label>
-
-            <input
-              type="radio"
-              id="conditionUsed"
-              name="condition_type"
-              value="used">
-
-            <label for="conditionUsed">
-              Used
-            </label>
-
-          </div>
+          <%- include('partials/condition-options') %>
 
         </div>
 

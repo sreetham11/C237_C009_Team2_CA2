@@ -35,75 +35,85 @@
     <% } %>
 
     <div class="page-section">
-      <h1>Welcome to ResellVault</h1>
+      <h1 class="hero-heading">Welcome to Resell<span class="accent-text">Vault</span><svg class="hero-heading-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg></h1>
 
       <p class="lead">
-        Buy, sell and manage trading cards, collectibles and clothing in one place.
+        The vault for collectors. Trading cards, collectibles and clothing, secured and verified.
       </p>
 
-      <% if (user) { %>
-        <a
-          href="/products"
-          class="btn btn-primary me-2">
-          View Listings
-        </a>
+      <h3>Browse by category</h3>
 
-        <a
-          href="/searchProducts"
-          class="btn btn-outline-primary me-2">
-          Search Products
-        </a>
-
-        <% if (user.role === 'seller') { %>
-          <a
-            href="/products/new"
-            class="btn btn-success">
-            Add Product
-          </a>
-        <% } %>
-      <% } else { %>
-        <a
-          href="/register"
-          class="btn btn-primary me-2">
-          Create Account
-        </a>
-
-        <a
-          href="/login"
-          class="btn btn-outline-dark">
-          Login
-        </a>
-      <% } %>
+      <div class="category-pills">
+        <% [
+          'Trading Cards',
+          'Collectibles',
+          'Clothing',
+          'Shoes',
+          'Accessories',
+          'Electronics',
+          'Others'
+        ].forEach(function(category) { %>
+          <form action="/searchProducts" method="POST">
+            <input type="hidden" name="searchCategory" value="<%= category %>">
+            <button type="submit" class="category-pill">
+              <%= category %>
+            </button>
+          </form>
+        <% }); %>
+      </div>
     </div>
 
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        <div class="page-section h-100">
+    <div class="row g-4 home-cards-row">
+      <div class="col-md-4">
+        <div class="page-section info-card h-100 mb-0">
+          <div class="info-card-icon">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="7"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
           <h3>Find Products</h3>
-          <p>Search and filter listings by product name or category.</p>
-          <a href="/searchProducts" class="btn btn-outline-primary">
-            Search Products
-          </a>
+          <p>Filter listings by exact product name, or narrow results down to a single category in seconds.</p>
+          <div class="info-card-highlight">
+            <strong>7 categories</strong> to search across, including Others.
+          </div>
         </div>
       </div>
 
-      <div class="col-md-4 mb-3">
-        <div class="page-section h-100">
+      <div class="col-md-4">
+        <div class="page-section info-card h-100 mb-0">
+          <div class="info-card-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            </svg>
+          </div>
           <h3>Browse Listings</h3>
-          <p>View available trading cards, collectibles and clothing.</p>
-          <a href="/products" class="btn btn-outline-primary">
-            View Listings
-          </a>
+          <p>Every active listing from every seller lives in one feed, covering trading cards, collectibles, shoes, apparel and more.</p>
+          <div class="info-card-highlight">
+            <strong>One feed</strong>, every seller, no separate storefronts to check.
+          </div>
         </div>
       </div>
 
-      <div class="col-md-4 mb-3">
-        <div class="page-section h-100">
+      <div class="col-md-4">
+        <div class="page-section info-card h-100 mb-0">
+          <div class="info-card-icon">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path>
+            </svg>
+          </div>
           <h3>Your Account</h3>
-          <p>Access your dashboard and manage your ResellVault activity.</p>
-          <a href="/dashboard" class="btn btn-outline-primary">
-            Open Dashboard
-          </a>
+          <p>Buyers track orders and manage their cart from the dashboard. Sellers manage listings, monitor sales and update inventory.</p>
+          <div class="info-card-highlight">
+            <strong>Role-based</strong> dashboard that adapts to how you use ResellVault.
+          </div>
         </div>
       </div>
     </div>

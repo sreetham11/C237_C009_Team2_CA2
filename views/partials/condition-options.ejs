@@ -1,0 +1,59 @@
+<%
+  var conditionTiers = [
+    {
+      id: 'conditionBrandNew',
+      value: 'Brand New',
+      description: 'Completely new and unused, often still in original packaging.'
+    },
+    {
+      id: 'conditionLikeNew',
+      value: 'Like New',
+      description: 'Used only a handful of times; shows little to no signs of wear.'
+    },
+    {
+      id: 'conditionLightlyUsed',
+      value: 'Lightly Used',
+      description: 'Has been used, but shows minor cosmetic imperfections or standard wear.'
+    },
+    {
+      id: 'conditionWellUsed',
+      value: 'Well Used',
+      description: 'Shows noticeable signs of wear, such as scratches, fading, or minor defects, but remains fully functional.'
+    },
+    {
+      id: 'conditionHeavilyUsed',
+      value: 'Heavily Used',
+      description: 'Significant wear, may have functional or cosmetic issues but still usable.'
+    }
+  ];
+
+  var selectedCondition =
+    (typeof product !== 'undefined' && product)
+      ? product.condition_type
+      : '';
+%>
+
+<div class="condition-options">
+
+  <% conditionTiers.forEach(function(tier, index) { %>
+
+    <div class="condition-option">
+
+      <input
+        type="radio"
+        id="<%= tier.id %>"
+        name="condition_type"
+        value="<%= tier.value %>"
+        <%= index === 0 ? 'required' : '' %>
+        <%= selectedCondition === tier.value ? 'checked' : '' %>>
+
+      <label for="<%= tier.id %>">
+        <span><%= tier.value %></span>
+        <span class="condition-option-desc"><%= tier.description %></span>
+      </label>
+
+    </div>
+
+  <% }); %>
+
+</div>

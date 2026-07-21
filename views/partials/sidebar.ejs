@@ -1,44 +1,18 @@
-<style>
-
-  .sidebar {
-    position: fixed;
-    top: 56px;
-    left: 0;
-    width: 200px;
-    height: 100vh;
-    padding-top: 20px;
-    background-color: #343a40;
-    z-index: 1000;
-  }
-
-  .sidebar a {
-    display: block;
-    padding: 12px 20px;
-    text-decoration: none;
-    color: white;
-  }
-
-  .sidebar a:hover {
-    background-color: #495057;
-  }
-
-</style>
-
 <div class="sidebar">
 
   <a href="/">
     Home
   </a>
 
+  <a href="/products">
+    Browse Products
+  </a>
+
+  <a href="/dashboard">
+    My Dashboard
+  </a>
+
   <% if (user) { %>
-
-    <a href="/products">
-      Listings
-    </a>
-
-    <a href="/dashboard">
-      Dashboard
-    </a>
 
     <% if (user.role === 'seller') { %>
 

@@ -3,168 +3,106 @@
 
 <head>
   <meta charset="UTF-8">
-
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0">
-
   <title>My Cart - ResellVault</title>
-
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet">
-
   <link
     href="/style.css"
     rel="stylesheet">
 </head>
 
 <body>
-
   <%- include('partials/navbar') %>
   <%- include('partials/sidebar') %>
-
   <div class="content">
-
     <% if (messages && messages.length > 0) { %>
-
       <div class="alert alert-success">
-
         <% for (let i = 0; i < messages.length; i++) { %>
-
           <p class="mb-0">
             <%= messages[i] %>
           </p>
-
         <% } %>
-
       </div>
-
     <% } %>
-
     <% if (errors && errors.length > 0) { %>
-
       <div class="alert alert-danger">
-
         <% for (let i = 0; i < errors.length; i++) { %>
-
           <p class="mb-0">
             <%= errors[i] %>
           </p>
-
         <% } %>
-
       </div>
-
     <% } %>
 
     <div class="page-section">
-
       <h1>My Cart</h1>
-
       <% if (cart.length > 0) { %>
-
         <div class="table-responsive">
-
           <table class="table table-bordered table-striped align-middle">
-
             <thead class="table-dark">
-
-              <tr>
+              <tr></tr>
                 <th>Name</th>
                 <th>Image</th>
                 <th>Seller</th>
                 <th>Price</th>
                 <th>View</th>
               </tr>
-
             </thead>
-
             <tbody>
-
               <% for (let i = 0; i < cart.length; i++) { %>
-
                 <tr>
-
                   <td>
                     <%= cart[i].name %>
                   </td>
-
                   <td>
-
                     <% if (cart[i].image) { %>
-
                       <img
                         src="/images/<%= cart[i].image %>"
                         alt="<%= cart[i].name %>"
                         class="product-image">
-
                     <% } else { %>
-
                       No image
-
                     <% } %>
-
                   </td>
-
                   <td>
                     <%= cart[i].seller_name %>
                   </td>
-
                   <td>
                     $<%= cart[i].price %>
                   </td>
-
                   <td>
-
                     <a
                       href="/product/<%= cart[i].product_id %>"
                       class="btn btn-info btn-sm">
-
                       View
-
                     </a>
-
                   </td>
-
                 </tr>
-
               <% } %>
-
             </tbody>
-
           </table>
-
         </div>
 
         <div class="mt-4">
-
           <h2>
             Total: $<%= total %>
           </h2>
-
         </div>
-
       <% } else { %>
-
         <div class="alert alert-warning">
           Your cart is empty.
         </div>
-
       <% } %>
-
       <a
         href="/products"
         class="btn btn-primary mt-3">
-
         Continue Shopping
-
       </a>
-
     </div>
-
   </div>
-
 </body>
-
 </html>

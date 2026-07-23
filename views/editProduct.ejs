@@ -147,7 +147,7 @@
 
           </div>
 
-          <div class="mb-3">
+          <div class="mb-3" id="meetupLocationGroup">
 
             <label for="meetup_location" class="form-label">
               Meet-up Location
@@ -267,6 +267,24 @@
     <% } %>
 
   </div>
+
+  <script>
+    (function () {
+      var deliveryMethodSelect = document.getElementById('delivery_method');
+      var meetupLocationGroup = document.getElementById('meetupLocationGroup');
+
+      function toggleMeetupLocation() {
+        if (deliveryMethodSelect.value === 'delivery') {
+          meetupLocationGroup.style.display = 'none';
+        } else {
+          meetupLocationGroup.style.display = '';
+        }
+      }
+
+      deliveryMethodSelect.addEventListener('change', toggleMeetupLocation);
+      toggleMeetupLocation();
+    })();
+  </script>
 
 </body>
 

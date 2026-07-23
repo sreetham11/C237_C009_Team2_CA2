@@ -89,7 +89,6 @@
           <div class="product-detail-actions">
             <% if (
               user &&
-              user.role === 'seller' &&
               product.seller_id == user.user_id
             ) { %>
               <a
@@ -99,7 +98,13 @@
               </a>
             <% } %>
 
-            <% if (user && user.role === 'admin') { %>
+            <% if (
+              user &&
+              (
+                user.role === 'admin' ||
+                product.seller_id == user.user_id
+              )
+            ) { %>
               <a
                 href="/deleteProduct/<%= product.product_id %>"
                 class="btn btn-danger"
@@ -111,6 +116,7 @@
             <% if (
               user &&
               (user.role === 'buyer' ||
+              user.role === 'seller' ||
               user.role === 'user')
             ) { %>
               <form

@@ -10,39 +10,35 @@
 
     </a>
 
-    <% if (user) { %>
+    <div class="mx-auto navbar-search">
 
-      <div class="mx-auto navbar-search">
+      <form
+        class="d-flex"
+        action="/searchProducts"
+        method="POST">
 
-        <form
-          class="d-flex"
-          action="/searchProducts"
-          method="POST">
+        <input
+          class="form-control me-2"
+          type="text"
+          name="searchName"
+          placeholder="Search product name">
 
-          <input
-            class="form-control me-2"
-            type="text"
-            name="searchName"
-            placeholder="Search product name">
+        <input
+          type="hidden"
+          name="searchCategory"
+          value="">
 
-          <input
-            type="hidden"
-            name="searchCategory"
-            value="">
+        <button
+          class="btn btn-primary"
+          type="submit">
 
-          <button
-            class="btn btn-primary"
-            type="submit">
+          Search
 
-            Search
+        </button>
 
-          </button>
+      </form>
 
-        </form>
-
-      </div>
-
-    <% } %>
+    </div>
 
     <div class="ms-auto">
 
@@ -54,6 +50,7 @@
 
         <% if (
           user.role === 'buyer' ||
+          user.role === 'seller' ||
           user.role === 'user'
         ) { %>
 

@@ -61,153 +61,165 @@
     <div class="page-section">
 
       <h1>
-        Product Listings
+        <% if (myListings) { %>
+          My Listings
+        <% } else { %>
+          Product Listings
+        <% } %>
       </h1>
 
-      <h2 id="search-form" class="h4 mt-4">
-        Search and Filter
-      </h2>
+      <% if (!myListings) { %>
 
-      <form
-        action="/searchProducts"
-        method="POST"
-        class="mt-3">
+        <h2 id="search-form" class="h4 mt-4">
+          Search and Filter
+        </h2>
 
-        <div class="row">
+        <form
+          action="/searchProducts"
+          method="POST"
+          class="mt-3">
 
-          <div class="col-md-6 mb-3">
+          <div class="row">
 
-            <label
-              for="searchName"
-              class="form-label">
+            <div class="col-md-6 mb-3">
 
-              Product Name
+              <label
+                for="searchName"
+                class="form-label">
 
-            </label>
+                Product Name
 
-            <input
-              type="text"
-              id="searchName"
-              name="searchName"
-              class="form-control"
-              value="<%= searchName %>"
-              placeholder="Enter part of a product name">
+              </label>
+
+              <input
+                type="text"
+                id="searchName"
+                name="searchName"
+                class="form-control"
+                value="<%= searchName %>"
+                placeholder="Enter part of a product name">
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+              <label
+                for="searchCategory"
+                class="form-label">
+
+                Category
+
+              </label>
+
+              <select
+                id="searchCategory"
+                name="searchCategory"
+                class="form-select">
+
+                <option value="">
+                  All Categories
+                </option>
+
+                <option
+                  value="Trading Cards"
+                  <% if (searchCategory === 'Trading Cards') { %>
+                    selected
+                  <% } %>>
+
+                  Trading Cards
+
+                </option>
+
+                <option
+                  value="Collectibles"
+                  <% if (searchCategory === 'Collectibles') { %>
+                    selected
+                  <% } %>>
+
+                  Collectibles
+
+                </option>
+
+                <option
+                  value="Clothing"
+                  <% if (searchCategory === 'Clothing') { %>
+                    selected
+                  <% } %>>
+
+                  Clothing
+
+                </option>
+
+                <option
+                  value="Shoes"
+                  <% if (searchCategory === 'Shoes') { %>
+                    selected
+                  <% } %>>
+
+                  Shoes
+
+                </option>
+
+                <option
+                  value="Accessories"
+                  <% if (searchCategory === 'Accessories') { %>
+                    selected
+                  <% } %>>
+
+                  Accessories
+
+                </option>
+
+                <option
+                  value="Electronics"
+                  <% if (searchCategory === 'Electronics') { %>
+                    selected
+                  <% } %>>
+
+                  Electronics
+
+                </option>
+
+              </select>
+
+            </div>
+
+            <div class="col-md-2 mb-3 d-flex align-items-end">
+
+              <button
+                type="submit"
+                class="btn btn-primary">
+
+                Search
+
+              </button>
+
+            </div>
 
           </div>
 
-          <div class="col-md-4 mb-3">
+          <a
+            href="/products"
+            class="btn btn-secondary">
 
-            <label
-              for="searchCategory"
-              class="form-label">
+            Clear
 
-              Category
+          </a>
 
-            </label>
+        </form>
 
-            <select
-              id="searchCategory"
-              name="searchCategory"
-              class="form-select">
-
-              <option value="">
-                All Categories
-              </option>
-
-              <option
-                value="Trading Cards"
-                <% if (searchCategory === 'Trading Cards') { %>
-                  selected
-                <% } %>>
-
-                Trading Cards
-
-              </option>
-
-              <option
-                value="Collectibles"
-                <% if (searchCategory === 'Collectibles') { %>
-                  selected
-                <% } %>>
-
-                Collectibles
-
-              </option>
-
-              <option
-                value="Clothing"
-                <% if (searchCategory === 'Clothing') { %>
-                  selected
-                <% } %>>
-
-                Clothing
-
-              </option>
-
-              <option
-                value="Shoes"
-                <% if (searchCategory === 'Shoes') { %>
-                  selected
-                <% } %>>
-
-                Shoes
-
-              </option>
-
-              <option
-                value="Accessories"
-                <% if (searchCategory === 'Accessories') { %>
-                  selected
-                <% } %>>
-
-                Accessories
-
-              </option>
-
-              <option
-                value="Electronics"
-                <% if (searchCategory === 'Electronics') { %>
-                  selected
-                <% } %>>
-
-                Electronics
-
-              </option>
-
-            </select>
-
-          </div>
-
-          <div class="col-md-2 mb-3 d-flex align-items-end">
-
-            <button
-              type="submit"
-              class="btn btn-primary">
-
-              Search
-
-            </button>
-
-          </div>
-
-        </div>
-
-        <a
-          href="/products"
-          class="btn btn-secondary">
-
-          Clear
-
-        </a>
-
-      </form>
+      <% } %>
 
     </div>
 
     <div class="page-section">
 
       <h2>
-        Products
+        <% if (myListings) { %>
+          Your Listings
+        <% } else { %>
+          Products
+        <% } %>
       </h2>
 
       <% if (products.length > 0) { %>
@@ -292,7 +304,6 @@
 
                     <% if (
                       user &&
-                      user.role === 'seller' &&
                       products[i].seller_id == user.user_id
                     ) { %>
 
@@ -314,7 +325,13 @@
 
                   <td>
 
-                    <% if (user && user.role === 'admin') { %>
+                    <% if (
+                      user &&
+                      (
+                        user.role === 'admin' ||
+                        products[i].seller_id == user.user_id
+                      )
+                    ) { %>
 
                       <a
                         href="/deleteProduct/<%= products[i].product_id %>"
@@ -338,6 +355,7 @@
                     <% if (
                       user &&
                       (user.role === 'buyer' ||
+                      user.role === 'seller' ||
                       user.role === 'user')
                     ) { %>
 
@@ -376,7 +394,21 @@
       <% } else { %>
 
         <div class="alert alert-warning">
-          No matching products were found.
+          <% if (myListings) { %>
+
+            <p class="mb-3">
+              You haven't listed any products yet.
+            </p>
+
+            <a href="/products/new" class="btn btn-success btn-sm">
+              Add Product
+            </a>
+
+          <% } else { %>
+
+            No matching products were found.
+
+          <% } %>
         </div>
 
       <% } %>

@@ -41,15 +41,107 @@
       <%- include('partials/profile-picture') %>
 
       <div class="mt-4">
-        <a href="/products" class="btn btn-primary me-2">
-          View Listings
+        <a href="/cart" class="btn btn-primary me-2">
+          View Cart
         </a>
 
-        <a href="/searchProducts" class="btn btn-outline-primary">
-          Search Products
+        <a href="/products?myListings=true" class="btn btn-primary">
+          Manage Listings
         </a>
       </div>
     </div>
+
+    <% if (cartCount === 0) { %>
+
+      <div class="page-section stat-empty mt-4">
+        <p class="mb-3">
+          Your cart is empty - browse products to add something!
+        </p>
+
+        <a href="/products" class="btn btn-success">
+          Browse Products
+        </a>
+      </div>
+
+    <% } else { %>
+
+      <div class="row g-4 mt-4">
+        <div class="col-md-6">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              <%= cartCount %>
+            </div>
+            <div class="stat-card-label">
+              Items in Cart
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              $<%= cartTotal.toFixed(2) %>
+            </div>
+            <div class="stat-card-label">
+              Cart Total Value
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <% } %>
+
+    <% if (listingCount === 0) { %>
+
+      <div class="page-section stat-empty mt-4">
+        <p class="mb-3">
+          No listings yet. Add your first product to get started.
+        </p>
+
+        <a href="/products/new" class="btn btn-success">
+          Add Product
+        </a>
+      </div>
+
+    <% } else { %>
+
+      <div class="row g-4 mt-4">
+        <div class="col-md-4">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              <%= listingCount %>
+            </div>
+            <div class="stat-card-label">
+              Active Listings
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              <%= totalQuantity %>
+            </div>
+            <div class="stat-card-label">
+              Total Inventory Quantity
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              $<%= totalValue.toFixed(2) %>
+            </div>
+            <div class="stat-card-label">
+              Total Inventory Value
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <% } %>
+
   </div>
 </body>
 </html>

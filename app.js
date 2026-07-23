@@ -74,25 +74,13 @@ const checkAuthenticated = (req, res, next) => {
   res.redirect('/login');
 };
 
-const checkRole = (role) => {
-  return (req, res, next) => {
-    if (
-      req.session.user &&
-      req.session.user.role === role
-    ) {
-      return next();
-    }
-
-    req.flash('error', 'Access denied');
-    res.redirect('/dashboard');
-  };
-};
-
-const checkBuyer = (req, res, next) => {
+// Buyers and sellers can both use the cart
+const checkCartAccess = (req, res, next) => {
   if (
     req.session.user &&
     (
       req.session.user.role === 'buyer' ||
+      req.session.user.role === 'seller' ||
       req.session.user.role === 'user'
     )
   ) {
@@ -101,10 +89,26 @@ const checkBuyer = (req, res, next) => {
 
   req.flash(
     'error',
-    'Only buyers can use the cart.'
+    'Please log in to use the cart.'
   );
 
   res.redirect('/products');
+};
+
+// Sellers and buyers can both list products
+const checkSellerOrBuyer = (req, res, next) => {
+  if (
+    req.session.user &&
+    (
+      req.session.user.role === 'seller' ||
+      req.session.user.role === 'buyer'
+    )
+  ) {
+    return next();
+  }
+
+  req.flash('error', 'Access denied');
+  res.redirect('/dashboard');
 };
 
 // Add seller usernames to the products.
@@ -138,16 +142,56 @@ const addSellerNames = (products, callback) => {
   });
 };
 
-// Get all products belonging to one seller.
-// Reused by GET /products (Manage Listings) and the Seller Dashboard stats.
-const getSellerProducts = (sellerId, callback) => {
+// Get all products belonging to one owner (seller or buyer).
+// Reused by GET /products (Manage Listings) and the Seller/Buyer Dashboard stats.
+const getProductsByOwner = (ownerId, callback) => {
   const sql = `
     SELECT *
     FROM products
     WHERE seller_id = ?
   `;
 
-  db.query(sql, [sellerId], callback);
+  db.query(sql, [ownerId], callback);
+};
+
+// Total quantity and total value across a set of products.
+// Shared by the Seller and Buyer Dashboard "listings" stats.
+const summarizeProductStats = (products) => {
+  let totalQuantity = 0;
+  let totalValue = 0;
+
+  for (let i = 0; i < products.length; i++) {
+    totalQuantity =
+      totalQuantity +
+      Number(products[i].quantity);
+
+    totalValue =
+      totalValue +
+      (Number(products[i].price) *
+        Number(products[i].quantity));
+  }
+
+  return {
+    totalQuantity: totalQuantity,
+    totalValue: totalValue
+  };
+};
+
+// Item count and total value of the session cart.
+// Shared by GET /cart and the Buyer/Seller Dashboard cart stats.
+const summarizeCart = (cart) => {
+  let total = 0;
+
+  for (let i = 0; i < cart.length; i++) {
+    total =
+      total +
+      Number(cart[i].price);
+  }
+
+  return {
+    count: cart.length,
+    total: total
+  };
 };
 
 // Home page
@@ -369,7 +413,11 @@ app.get(
         });
       });
     } else if (user.role === 'seller') {
-      getSellerProducts(user.user_id, (err, results) => {
+      const cartSummary = summarizeCart(
+        req.session.cart || []
+      );
+
+      getProductsByOwner(user.user_id, (err, results) => {
         if (err) {
           console.error(
             'Seller stats query error:',
@@ -382,38 +430,61 @@ app.get(
             errors: req.flash('error'),
             listingCount: 0,
             totalQuantity: 0,
-            totalValue: 0
+            totalValue: 0,
+            cartCount: cartSummary.count,
+            cartTotal: cartSummary.total
           });
         }
 
-        let totalQuantity = 0;
-        let totalValue = 0;
-
-        for (let i = 0; i < results.length; i++) {
-          totalQuantity =
-            totalQuantity +
-            Number(results[i].quantity);
-
-          totalValue =
-            totalValue +
-            (Number(results[i].price) *
-              Number(results[i].quantity));
-        }
+        const stats = summarizeProductStats(results);
 
         res.render('sellerdashboard', {
           user: user,
           messages: req.flash('success'),
           errors: req.flash('error'),
           listingCount: results.length,
-          totalQuantity: totalQuantity,
-          totalValue: totalValue
+          totalQuantity: stats.totalQuantity,
+          totalValue: stats.totalValue,
+          cartCount: cartSummary.count,
+          cartTotal: cartSummary.total
         });
       });
     } else {
-      res.render('dashboard', {
-        user: user,
-        messages: req.flash('success'),
-        errors: req.flash('error')
+      const cartSummary = summarizeCart(
+        req.session.cart || []
+      );
+
+      getProductsByOwner(user.user_id, (err, results) => {
+        if (err) {
+          console.error(
+            'Buyer listing stats query error:',
+            err
+          );
+
+          return res.render('dashboard', {
+            user: user,
+            messages: req.flash('success'),
+            errors: req.flash('error'),
+            cartCount: cartSummary.count,
+            cartTotal: cartSummary.total,
+            listingCount: 0,
+            totalQuantity: 0,
+            totalValue: 0
+          });
+        }
+
+        const stats = summarizeProductStats(results);
+
+        res.render('dashboard', {
+          user: user,
+          messages: req.flash('success'),
+          errors: req.flash('error'),
+          cartCount: cartSummary.count,
+          cartTotal: cartSummary.total,
+          listingCount: results.length,
+          totalQuantity: stats.totalQuantity,
+          totalValue: stats.totalValue
+        });
       });
     }
   }
@@ -487,7 +558,7 @@ app.get('/logout', (req, res) => {
 app.get(
   '/products/new',
   checkAuthenticated,
-  checkRole('seller'),
+  checkSellerOrBuyer,
   (req, res) => {
     res.render('newProduct', {
       user: req.session.user,
@@ -501,7 +572,7 @@ app.get(
 app.post(
   '/products',
   checkAuthenticated,
-  checkRole('seller'),
+  checkSellerOrBuyer,
   upload.single('image'),
   (req, res) => {
     const {
@@ -643,6 +714,7 @@ app.get(
             user: req.session.user,
             searchName: '',
             searchCategory: '',
+            myListings: myListings,
             messages: req.flash('success'),
             errors: req.flash('error')
           });
@@ -651,7 +723,7 @@ app.get(
     };
 
     if (myListings && req.session.user) {
-      getSellerProducts(
+      getProductsByOwner(
         req.session.user.user_id,
         handleProductResults
       );
@@ -728,11 +800,10 @@ app.get(
 
 // PERSON D — EDITING EXISTING PRODUCT INFORMATION
 
-// Only the seller who owns the product can open the edit form
+// Only the user who owns the product can open the edit form
 app.get(
   '/editProduct/:id',
   checkAuthenticated,
-  checkRole('seller'),
   (req, res) => {
     const productId = req.params.id;
     const user = req.session.user;
@@ -787,11 +858,10 @@ app.get(
   }
 );
 
-// Only the seller who owns the product can update it
+// Only the user who owns the product can update it
 app.post(
   '/editProduct/:id',
   checkAuthenticated,
-  checkRole('seller'),
   upload.single('image'),
   (req, res) => {
     const productId = req.params.id;
@@ -936,43 +1006,86 @@ app.post(
 
 // PERSON E — REMOVING PRODUCT INFORMATION
 
-// Only admins can delete products
+// Sellers can delete their own products; admins can delete any product
 app.get(
   '/deleteProduct/:id',
   checkAuthenticated,
-  checkRole('admin'),
   (req, res) => {
     const productId = req.params.id;
+    const user = req.session.user;
 
     const sql = `
-      DELETE FROM products
+      SELECT *
+      FROM products
       WHERE product_id = ?
     `;
 
     db.query(
       sql,
       [productId],
-      (error) => {
+      (error, results) => {
         if (error) {
           console.error(
-            'Error deleting product:',
-            error
+            'Database query error:',
+            error.message
           );
 
+          return res.send(
+            'Error retrieving product by ID'
+          );
+        }
+
+        if (results.length === 0) {
+          return res.send(
+            'Product not found'
+          );
+        }
+
+        const product = results[0];
+
+        if (
+          user.role !== 'admin' &&
+          product.seller_id != user.user_id
+        ) {
           req.flash(
             'error',
-            'Could not delete the product.'
+            'You can only delete your own products.'
           );
 
           return res.redirect('/products');
         }
 
-        req.flash(
-          'success',
-          'Product deleted successfully!'
-        );
+        const deleteSql = `
+          DELETE FROM products
+          WHERE product_id = ?
+        `;
 
-        res.redirect('/products');
+        db.query(
+          deleteSql,
+          [productId],
+          (deleteError) => {
+            if (deleteError) {
+              console.error(
+                'Error deleting product:',
+                deleteError
+              );
+
+              req.flash(
+                'error',
+                'Could not delete the product.'
+              );
+
+              return res.redirect('/products');
+            }
+
+            req.flash(
+              'success',
+              'Product deleted successfully!'
+            );
+
+            res.redirect('/products');
+          }
+        );
       }
     );
   }
@@ -988,55 +1101,48 @@ app.get(
   }
 );
 
-// Exact product-name search and category filter
+// Case-insensitive partial product-name search (matches any word) and category filter
 app.post(
   '/searchProducts',
   (req, res) => {
     const searchName = req.body.searchName;
     const searchCategory = req.body.searchCategory;
 
+    const trimmedName = searchName
+      ? searchName.trim()
+      : '';
+
+    const nameWords = trimmedName
+      ? trimmedName.split(/\s+/)
+      : [];
+
     let sql = `
       SELECT *
       FROM products
     `;
 
-    let values = [];
+    const conditions = [];
+    const values = [];
 
-    if (
-      searchName &&
-      searchCategory
-    ) {
-      sql = `
-        SELECT *
-        FROM products
-        WHERE name = ?
-        AND category = ?
-      `;
+    if (nameWords.length > 0) {
+      const nameConditions = nameWords
+        .map(() => 'LOWER(name) LIKE ?')
+        .join(' OR ');
 
-      values = [
-        searchName,
-        searchCategory
-      ];
-    } else if (searchName) {
-      sql = `
-        SELECT *
-        FROM products
-        WHERE name = ?
-      `;
+      conditions.push(`(${nameConditions})`);
 
-      values = [
-        searchName
-      ];
-    } else if (searchCategory) {
-      sql = `
-        SELECT *
-        FROM products
-        WHERE category = ?
-      `;
+      nameWords.forEach((word) => {
+        values.push(`%${word.toLowerCase()}%`);
+      });
+    }
 
-      values = [
-        searchCategory
-      ];
+    if (searchCategory) {
+      conditions.push('category = ?');
+      values.push(searchCategory);
+    }
+
+    if (conditions.length > 0) {
+      sql += ` WHERE ${conditions.join(' AND ')}`;
     }
 
     db.query(
@@ -1073,6 +1179,7 @@ app.post(
               searchName: searchName,
               searchCategory: searchCategory,
               user: req.session.user,
+              myListings: false,
               messages: req.flash('success'),
               errors: req.flash('error')
             });
@@ -1083,13 +1190,13 @@ app.post(
   }
 );
 
-// BUYER CART
+// CART
 
-// Add a product to the buyer's session cart
+// Add a product to the logged-in user's session cart
 app.post(
   '/cart/add/:id',
   checkAuthenticated,
-  checkBuyer,
+  checkCartAccess,
   (req, res) => {
     const productId = req.params.id;
 
@@ -1164,29 +1271,18 @@ app.post(
   }
 );
 
-// Display buyer cart
+// Display the logged-in user's cart
 app.get(
   '/cart',
   checkAuthenticated,
-  checkBuyer,
+  checkCartAccess,
   (req, res) => {
-    let cart = [];
-
-    if (req.session.cart) {
-      cart = req.session.cart;
-    }
-
-    let total = 0;
-
-    for (let i = 0; i < cart.length; i++) {
-      total =
-        total +
-        Number(cart[i].price);
-    }
+    const cart = req.session.cart || [];
+    const cartSummary = summarizeCart(cart);
 
     res.render('cart', {
       cart: cart,
-      total: total,
+      total: cartSummary.total,
       user: req.session.user,
       messages: req.flash('success'),
       errors: req.flash('error')

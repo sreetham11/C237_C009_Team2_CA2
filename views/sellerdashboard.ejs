@@ -41,8 +41,12 @@
       <%- include('partials/profile-picture') %>
 
       <div class="mt-4">
-        <a href="/products?myListings=true" class="btn btn-primary">
+        <a href="/products?myListings=true" class="btn btn-primary me-2">
           Manage Listings
+        </a>
+
+        <a href="/cart" class="btn btn-primary">
+          View Cart
         </a>
       </div>
     </div>
@@ -91,6 +95,46 @@
             </div>
             <div class="stat-card-label">
               Total Inventory Value
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <% } %>
+
+    <% if (cartCount === 0) { %>
+
+      <div class="page-section stat-empty mt-4">
+        <p class="mb-3">
+          Your cart is empty - browse products to add something!
+        </p>
+
+        <a href="/products" class="btn btn-success">
+          Browse Products
+        </a>
+      </div>
+
+    <% } else { %>
+
+      <div class="row g-4 mt-4">
+        <div class="col-md-6">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              <%= cartCount %>
+            </div>
+            <div class="stat-card-label">
+              Items in Cart
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              $<%= cartTotal.toFixed(2) %>
+            </div>
+            <div class="stat-card-label">
+              Cart Total Value
             </div>
           </div>
         </div>

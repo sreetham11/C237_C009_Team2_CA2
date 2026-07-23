@@ -14,7 +14,10 @@
 
   <% if (user) { %>
 
-    <% if (user.role === 'seller') { %>
+    <% if (
+      user.role === 'seller' ||
+      user.role === 'buyer'
+    ) { %>
 
       <a href="/products/new">
         Add Product
@@ -24,6 +27,7 @@
 
     <% if (
       user.role === 'buyer' ||
+      user.role === 'seller' ||
       user.role === 'user'
     ) { %>
 

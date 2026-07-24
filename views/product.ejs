@@ -89,7 +89,13 @@
           <div class="product-detail-actions">
             <% if (
               user &&
-              product.seller_id == user.user_id
+              (
+                product.seller_id == user.user_id ||
+                (
+                  user.role === 'admin' &&
+                  product.seller_role === 'admin'
+                )
+              )
             ) { %>
               <a
                 href="/editProduct/<%= product.product_id %>"
@@ -117,7 +123,8 @@
               user &&
               (user.role === 'buyer' ||
               user.role === 'seller' ||
-              user.role === 'user')
+              user.role === 'user' ||
+              user.role === 'admin')
             ) { %>
               <form
                 action="/cart/add/<%= product.product_id %>"

@@ -885,6 +885,12 @@ input[type="checkbox"] {
   box-shadow: var(--shadow-medium);
 }
 
+.profile-pic-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .profile-pic-wrap {
   position: relative;
   display: inline-block;
@@ -927,9 +933,8 @@ input[type="checkbox"] {
 }
 
 .profile-pic-form {
-  max-width: 280px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 220px;
+  max-width: 100%;
 }
 
 .feature-card,

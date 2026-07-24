@@ -38,12 +38,54 @@
       <h1>Admin Dashboard</h1>
       <p>Welcome, <%= user.username %> (Admin)</p>
 
+      <%- include('partials/profile-picture') %>
+
       <a href="/products" class="btn btn-primary">
         Manage Products
       </a>
     </div>
 
-    <div class="page-section">
+    <% if (cartCount === 0) { %>
+
+      <div class="page-section stat-empty mt-4">
+        <p class="mb-3">
+          Your cart is empty - browse products to add something!
+        </p>
+
+        <a href="/products" class="btn btn-success">
+          Browse Products
+        </a>
+      </div>
+
+    <% } else { %>
+
+      <div class="row g-4 mt-4">
+        <div class="col-md-6">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              <%= cartCount %>
+            </div>
+            <div class="stat-card-label">
+              Items in Cart
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="page-section stat-card">
+            <div class="stat-card-value">
+              $<%= cartTotal.toFixed(2) %>
+            </div>
+            <div class="stat-card-label">
+              Cart Total Value
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <% } %>
+
+    <div class="page-section mt-4">
       <h2>Registered Users</h2>
 
       <div class="table-responsive">

@@ -304,7 +304,13 @@
 
                     <% if (
                       user &&
-                      products[i].seller_id == user.user_id
+                      (
+                        products[i].seller_id == user.user_id ||
+                        (
+                          user.role === 'admin' &&
+                          products[i].seller_role === 'admin'
+                        )
+                      )
                     ) { %>
 
                       <a
@@ -356,7 +362,8 @@
                       user &&
                       (user.role === 'buyer' ||
                       user.role === 'seller' ||
-                      user.role === 'user')
+                      user.role === 'user' ||
+                      user.role === 'admin')
                     ) { %>
 
                       <form

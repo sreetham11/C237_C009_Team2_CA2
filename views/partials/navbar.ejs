@@ -44,14 +44,15 @@
 
       <% if (user) { %>
 
-        <span class="text-light me-3">
+        <a href="/dashboard" class="navbar-greeting text-light me-3">
           Hello, <%= user.username %>
-        </span>
+        </a>
 
         <% if (
           user.role === 'buyer' ||
           user.role === 'seller' ||
-          user.role === 'user'
+          user.role === 'user' ||
+          user.role === 'admin'
         ) { %>
 
           <a
@@ -102,6 +103,14 @@
 
   .navbar-search {
     width: 50%;
+  }
+
+  .navbar-greeting {
+    transition: opacity 0.15s ease;
+  }
+
+  .navbar-greeting:hover {
+    opacity: 0.75;
   }
 
   @media screen and (max-width: 768px) {

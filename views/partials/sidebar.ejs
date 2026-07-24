@@ -16,7 +16,8 @@
 
     <% if (
       user.role === 'seller' ||
-      user.role === 'buyer'
+      user.role === 'buyer' ||
+      user.role === 'admin'
     ) { %>
 
       <a href="/products/new">
@@ -28,7 +29,8 @@
     <% if (
       user.role === 'buyer' ||
       user.role === 'seller' ||
-      user.role === 'user'
+      user.role === 'user' ||
+      user.role === 'admin'
     ) { %>
 
       <a href="/cart">

@@ -8,21 +8,26 @@ const app = express();
 
 // DATABASE CONNECTION
 
-const db = mysql.createConnection({
+const db = mysql.createPool({
   host: 'c237-marlina-mysql.mysql.database.azure.com',
   user: 'c237_009',
   password: 'c237009@2026!',
   database: 'C237_009_team2_resellvault',
   ssl: {
     rejectUnauthorized: false
-  }
+  },
+  waitForConnections: true,
+  connectionLimit: 10,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000
 });
 
-db.connect((err) => {
+db.getConnection((err, connection) => {
   if (err) {
     throw err;
   }
 
+  connection.release();
   console.log('Connected to database');
 });
 
@@ -74,14 +79,15 @@ const checkAuthenticated = (req, res, next) => {
   res.redirect('/login');
 };
 
-// Buyers and sellers can both use the cart
+// Buyers, sellers and admins can all use the cart
 const checkCartAccess = (req, res, next) => {
   if (
     req.session.user &&
     (
       req.session.user.role === 'buyer' ||
       req.session.user.role === 'seller' ||
-      req.session.user.role === 'user'
+      req.session.user.role === 'user' ||
+      req.session.user.role === 'admin'
     )
   ) {
     return next();
@@ -95,13 +101,14 @@ const checkCartAccess = (req, res, next) => {
   res.redirect('/products');
 };
 
-// Sellers and buyers can both list products
+// Sellers, buyers and admins can all list products
 const checkSellerOrBuyer = (req, res, next) => {
   if (
     req.session.user &&
     (
       req.session.user.role === 'seller' ||
-      req.session.user.role === 'buyer'
+      req.session.user.role === 'buyer' ||
+      req.session.user.role === 'admin'
     )
   ) {
     return next();
@@ -111,11 +118,23 @@ const checkSellerOrBuyer = (req, res, next) => {
   res.redirect('/dashboard');
 };
 
-// Add seller usernames to the products.
+// Who can edit a product:
+// - the person who listed it, same as before, OR
+// - an admin editing a listing made by a DIFFERENT admin account
+// (admins still cannot edit buyer/seller listings this way)
+const canEditProduct = (user, product) => {
+  const isOwner = product.seller_id == user.user_id;
+  const listedByAdmin = product.lister_role === 'admin';
+
+  return isOwner || (user.role === 'admin' && listedByAdmin);
+};
+
+// Add seller usernames (and roles, so the view can tell
+// whether a listing was made by an admin) to the products.
 // Uses SELECT, arrays, loops and if statements.
 const addSellerNames = (products, callback) => {
   const sql = `
-    SELECT user_id, username
+    SELECT user_id, username, role
     FROM users
   `;
 
@@ -126,6 +145,7 @@ const addSellerNames = (products, callback) => {
 
     for (let i = 0; i < products.length; i++) {
       products[i].seller_name = 'Unknown Seller';
+      products[i].seller_role = null;
 
       for (let j = 0; j < users.length; j++) {
         if (
@@ -134,6 +154,9 @@ const addSellerNames = (products, callback) => {
         ) {
           products[i].seller_name =
             users[j].username;
+
+          products[i].seller_role =
+            users[j].role;
         }
       }
     }
@@ -177,21 +200,33 @@ const summarizeProductStats = (products) => {
   };
 };
 
-// Item count and total value of the session cart.
-// Shared by GET /cart and the Buyer/Seller Dashboard cart stats.
-const summarizeCart = (cart) => {
-  let total = 0;
+// Item count and total value of a user's saved cart (cart_items table).
+// Shared by GET /cart and the Buyer/Seller/Admin Dashboard cart stats.
+const getCartSummary = (userId, callback) => {
+  const sql = `
+    SELECT products.price
+    FROM cart_items
+    JOIN products
+      ON cart_items.product_id = products.product_id
+    WHERE cart_items.user_id = ?
+  `;
 
-  for (let i = 0; i < cart.length; i++) {
-    total =
-      total +
-      Number(cart[i].price);
-  }
+  db.query(sql, [userId], (error, rows) => {
+    if (error) {
+      return callback(error);
+    }
 
-  return {
-    count: cart.length,
-    total: total
-  };
+    let total = 0;
+
+    for (let i = 0; i < rows.length; i++) {
+      total = total + Number(rows[i].price);
+    }
+
+    callback(null, {
+      count: rows.length,
+      total: total
+    });
+  });
 };
 
 // Home page
@@ -372,121 +407,130 @@ app.get(
   (req, res) => {
     const user = req.session.user;
 
-    if (user.role === 'admin') {
-      const sql = `
-        SELECT
-          user_id,
-          username,
-          email,
-          registered_at
-        FROM users
-      `;
+    getCartSummary(user.user_id, (cartErr, cartSummaryResult) => {
+      if (cartErr) {
+        console.error(
+          'Cart summary query error:',
+          cartErr
+        );
+      }
 
-      db.query(sql, (err, results) => {
-        if (err) {
-          console.error(
-            'Error retrieving users:',
-            err
-          );
+      const cartSummary = cartErr ?
+        { count: 0, total: 0 } :
+        cartSummaryResult;
 
-          req.flash(
-            'error',
-            'Could not load registered users.'
-          );
+      if (user.role === 'admin') {
+        const sql = `
+          SELECT
+            user_id,
+            username,
+            email,
+            registered_at
+          FROM users
+        `;
 
-          return res.render(
-            'admindashboard',
-            {
-              user: user,
-              messages: req.flash('success'),
-              errors: req.flash('error'),
-              recentUsers: []
-            }
-          );
-        }
+        db.query(sql, (err, results) => {
+          if (err) {
+            console.error(
+              'Error retrieving users:',
+              err
+            );
 
-        res.render('admindashboard', {
-          user: user,
-          messages: req.flash('success'),
-          errors: req.flash('error'),
-          recentUsers: results
-        });
-      });
-    } else if (user.role === 'seller') {
-      const cartSummary = summarizeCart(
-        req.session.cart || []
-      );
+            req.flash(
+              'error',
+              'Could not load registered users.'
+            );
 
-      getProductsByOwner(user.user_id, (err, results) => {
-        if (err) {
-          console.error(
-            'Seller stats query error:',
-            err
-          );
+            return res.render(
+              'admindashboard',
+              {
+                user: user,
+                messages: req.flash('success'),
+                errors: req.flash('error'),
+                recentUsers: [],
+                cartCount: cartSummary.count,
+                cartTotal: cartSummary.total
+              }
+            );
+          }
 
-          return res.render('sellerdashboard', {
+          res.render('admindashboard', {
             user: user,
             messages: req.flash('success'),
             errors: req.flash('error'),
-            listingCount: 0,
-            totalQuantity: 0,
-            totalValue: 0,
+            recentUsers: results,
             cartCount: cartSummary.count,
             cartTotal: cartSummary.total
           });
-        }
-
-        const stats = summarizeProductStats(results);
-
-        res.render('sellerdashboard', {
-          user: user,
-          messages: req.flash('success'),
-          errors: req.flash('error'),
-          listingCount: results.length,
-          totalQuantity: stats.totalQuantity,
-          totalValue: stats.totalValue,
-          cartCount: cartSummary.count,
-          cartTotal: cartSummary.total
         });
-      });
-    } else {
-      const cartSummary = summarizeCart(
-        req.session.cart || []
-      );
+      } else if (user.role === 'seller') {
+        getProductsByOwner(user.user_id, (err, results) => {
+          if (err) {
+            console.error(
+              'Seller stats query error:',
+              err
+            );
 
-      getProductsByOwner(user.user_id, (err, results) => {
-        if (err) {
-          console.error(
-            'Buyer listing stats query error:',
-            err
-          );
+            return res.render('sellerdashboard', {
+              user: user,
+              messages: req.flash('success'),
+              errors: req.flash('error'),
+              listingCount: 0,
+              totalQuantity: 0,
+              totalValue: 0,
+              cartCount: cartSummary.count,
+              cartTotal: cartSummary.total
+            });
+          }
 
-          return res.render('dashboard', {
+          const stats = summarizeProductStats(results);
+
+          res.render('sellerdashboard', {
+            user: user,
+            messages: req.flash('success'),
+            errors: req.flash('error'),
+            listingCount: results.length,
+            totalQuantity: stats.totalQuantity,
+            totalValue: stats.totalValue,
+            cartCount: cartSummary.count,
+            cartTotal: cartSummary.total
+          });
+        });
+      } else {
+        getProductsByOwner(user.user_id, (err, results) => {
+          if (err) {
+            console.error(
+              'Buyer listing stats query error:',
+              err
+            );
+
+            return res.render('dashboard', {
+              user: user,
+              messages: req.flash('success'),
+              errors: req.flash('error'),
+              cartCount: cartSummary.count,
+              cartTotal: cartSummary.total,
+              listingCount: 0,
+              totalQuantity: 0,
+              totalValue: 0
+            });
+          }
+
+          const stats = summarizeProductStats(results);
+
+          res.render('dashboard', {
             user: user,
             messages: req.flash('success'),
             errors: req.flash('error'),
             cartCount: cartSummary.count,
             cartTotal: cartSummary.total,
-            listingCount: 0,
-            totalQuantity: 0,
-            totalValue: 0
+            listingCount: results.length,
+            totalQuantity: stats.totalQuantity,
+            totalValue: stats.totalValue
           });
-        }
-
-        const stats = summarizeProductStats(results);
-
-        res.render('dashboard', {
-          user: user,
-          messages: req.flash('success'),
-          errors: req.flash('error'),
-          cartCount: cartSummary.count,
-          cartTotal: cartSummary.total,
-          listingCount: results.length,
-          totalQuantity: stats.totalQuantity,
-          totalValue: stats.totalValue
         });
-      });
-    }
+      }
+    });
   }
 );
 
@@ -809,9 +853,13 @@ app.get(
     const user = req.session.user;
 
     const sql = `
-      SELECT *
+      SELECT
+        products.*,
+        users.role AS lister_role
       FROM products
-      WHERE product_id = ?
+      LEFT JOIN users
+        ON products.seller_id = users.user_id
+      WHERE products.product_id = ?
     `;
 
     db.query(
@@ -837,10 +885,7 @@ app.get(
 
         const product = results[0];
 
-        if (
-          product.seller_id !=
-          user.user_id
-        ) {
+        if (!canEditProduct(user, product)) {
           req.flash(
             'error',
             'You can only edit your own products.'
@@ -868,9 +913,13 @@ app.post(
     const user = req.session.user;
 
     const checkSql = `
-      SELECT *
+      SELECT
+        products.*,
+        users.role AS lister_role
       FROM products
-      WHERE product_id = ?
+      LEFT JOIN users
+        ON products.seller_id = users.user_id
+      WHERE products.product_id = ?
     `;
 
     db.query(
@@ -902,10 +951,7 @@ app.post(
 
         const product = checkResults[0];
 
-        if (
-          product.seller_id !=
-          user.user_id
-        ) {
+        if (!canEditProduct(user, product)) {
           req.flash(
             'error',
             'You can only edit your own products.'
@@ -1192,13 +1238,14 @@ app.post(
 
 // CART
 
-// Add a product to the logged-in user's session cart
+// Add a product to the logged-in user's saved cart (cart_items table)
 app.post(
   '/cart/add/:id',
   checkAuthenticated,
   checkCartAccess,
   (req, res) => {
     const productId = req.params.id;
+    const user = req.session.user;
 
     const sql = `
       SELECT *
@@ -1233,13 +1280,22 @@ app.post(
           return res.redirect('/products');
         }
 
-        addSellerNames(
-          results,
-          (sellerError, productsWithSellers) => {
-            if (sellerError) {
+        const insertSql = `
+          INSERT INTO cart_items (
+            user_id,
+            product_id
+          )
+          VALUES (?, ?)
+        `;
+
+        db.query(
+          insertSql,
+          [user.user_id, productId],
+          (insertError) => {
+            if (insertError) {
               console.error(
-                'Seller query error:',
-                sellerError
+                'Cart insert error:',
+                insertError
               );
 
               req.flash(
@@ -1249,14 +1305,6 @@ app.post(
 
               return res.redirect('/products');
             }
-
-            if (!req.session.cart) {
-              req.session.cart = [];
-            }
-
-            req.session.cart.push(
-              productsWithSellers[0]
-            );
 
             req.flash(
               'success',
@@ -1271,22 +1319,109 @@ app.post(
   }
 );
 
-// Display the logged-in user's cart
+// Display the logged-in user's saved cart
 app.get(
   '/cart',
   checkAuthenticated,
   checkCartAccess,
   (req, res) => {
-    const cart = req.session.cart || [];
-    const cartSummary = summarizeCart(cart);
+    const user = req.session.user;
 
-    res.render('cart', {
-      cart: cart,
-      total: cartSummary.total,
-      user: req.session.user,
-      messages: req.flash('success'),
-      errors: req.flash('error')
+    const sql = `
+      SELECT
+        cart_items.id AS cart_item_id,
+        products.*,
+        users.username AS seller_name
+      FROM cart_items
+      JOIN products
+        ON cart_items.product_id = products.product_id
+      LEFT JOIN users
+        ON products.seller_id = users.user_id
+      WHERE cart_items.user_id = ?
+      ORDER BY cart_items.added_at DESC
+    `;
+
+    db.query(sql, [user.user_id], (error, cart) => {
+      if (error) {
+        console.error(
+          'Cart query error:',
+          error
+        );
+
+        req.flash(
+          'error',
+          'Could not load your cart.'
+        );
+
+        return res.render('cart', {
+          cart: [],
+          total: 0,
+          user: user,
+          messages: req.flash('success'),
+          errors: req.flash('error')
+        });
+      }
+
+      let total = 0;
+
+      for (let i = 0; i < cart.length; i++) {
+        total = total + Number(cart[i].price);
+      }
+
+      res.render('cart', {
+        cart: cart,
+        total: total,
+        user: user,
+        messages: req.flash('success'),
+        errors: req.flash('error')
+      });
     });
+  }
+);
+
+// Remove one item from the logged-in user's saved cart.
+// The WHERE clause scopes the delete to this user, so nobody
+// can remove another user's cart item by guessing a cart_item id.
+app.post(
+  '/cart/remove/:id',
+  checkAuthenticated,
+  checkCartAccess,
+  (req, res) => {
+    const cartItemId = req.params.id;
+    const user = req.session.user;
+
+    const sql = `
+      DELETE FROM cart_items
+      WHERE id = ?
+      AND user_id = ?
+    `;
+
+    db.query(
+      sql,
+      [cartItemId, user.user_id],
+      (error) => {
+        if (error) {
+          console.error(
+            'Cart remove error:',
+            error
+          );
+
+          req.flash(
+            'error',
+            'Could not remove item from cart.'
+          );
+
+          return res.redirect('/cart');
+        }
+
+        req.flash(
+          'success',
+          'Item removed from cart.'
+        );
+
+        res.redirect('/cart');
+      }
+    );
   }
 );
 

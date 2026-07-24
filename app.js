@@ -177,7 +177,30 @@ const summarizeProductStats = (products) => {
   };
 };
 
-// Item count and total value of the session cart.
+// Get the logged-in user's cart rows from the database, joined with
+// product + seller details. Reused by GET /cart and the Buyer/Seller
+// Dashboard cart stats so both stay consistent with each other.
+const getCartItems = (userId, callback) => {
+  const sql = `
+    SELECT
+      cart_items.id AS cart_id,
+      cart_items.added_at,
+      products.product_id,
+      products.name,
+      products.image,
+      products.price,
+      users.username AS seller_name
+    FROM cart_items
+    JOIN products ON cart_items.product_id = products.product_id
+    JOIN users ON products.seller_id = users.user_id
+    WHERE cart_items.user_id = ?
+    ORDER BY cart_items.added_at DESC
+  `;
+
+  db.query(sql, [userId], callback);
+};
+
+// Item count and total value of the cart.
 // Shared by GET /cart and the Buyer/Seller Dashboard cart stats.
 const summarizeCart = (cart) => {
   let total = 0;
@@ -413,77 +436,95 @@ app.get(
         });
       });
     } else if (user.role === 'seller') {
-      const cartSummary = summarizeCart(
-        req.session.cart || []
-      );
-
-      getProductsByOwner(user.user_id, (err, results) => {
-        if (err) {
+      getCartItems(user.user_id, (cartError, cartRows) => {
+        if (cartError) {
           console.error(
-            'Seller stats query error:',
-            err
+            'Seller cart stats query error:',
+            cartError
           );
+        }
 
-          return res.render('sellerdashboard', {
+        const cartSummary = summarizeCart(
+          cartRows || []
+        );
+
+        getProductsByOwner(user.user_id, (err, results) => {
+          if (err) {
+            console.error(
+              'Seller stats query error:',
+              err
+            );
+
+            return res.render('sellerdashboard', {
+              user: user,
+              messages: req.flash('success'),
+              errors: req.flash('error'),
+              listingCount: 0,
+              totalQuantity: 0,
+              totalValue: 0,
+              cartCount: cartSummary.count,
+              cartTotal: cartSummary.total
+            });
+          }
+
+          const stats = summarizeProductStats(results);
+
+          res.render('sellerdashboard', {
             user: user,
             messages: req.flash('success'),
             errors: req.flash('error'),
-            listingCount: 0,
-            totalQuantity: 0,
-            totalValue: 0,
+            listingCount: results.length,
+            totalQuantity: stats.totalQuantity,
+            totalValue: stats.totalValue,
             cartCount: cartSummary.count,
             cartTotal: cartSummary.total
           });
-        }
-
-        const stats = summarizeProductStats(results);
-
-        res.render('sellerdashboard', {
-          user: user,
-          messages: req.flash('success'),
-          errors: req.flash('error'),
-          listingCount: results.length,
-          totalQuantity: stats.totalQuantity,
-          totalValue: stats.totalValue,
-          cartCount: cartSummary.count,
-          cartTotal: cartSummary.total
         });
       });
     } else {
-      const cartSummary = summarizeCart(
-        req.session.cart || []
-      );
-
-      getProductsByOwner(user.user_id, (err, results) => {
-        if (err) {
+      getCartItems(user.user_id, (cartError, cartRows) => {
+        if (cartError) {
           console.error(
-            'Buyer listing stats query error:',
-            err
+            'Buyer cart stats query error:',
+            cartError
           );
+        }
 
-          return res.render('dashboard', {
+        const cartSummary = summarizeCart(
+          cartRows || []
+        );
+
+        getProductsByOwner(user.user_id, (err, results) => {
+          if (err) {
+            console.error(
+              'Buyer listing stats query error:',
+              err
+            );
+
+            return res.render('dashboard', {
+              user: user,
+              messages: req.flash('success'),
+              errors: req.flash('error'),
+              cartCount: cartSummary.count,
+              cartTotal: cartSummary.total,
+              listingCount: 0,
+              totalQuantity: 0,
+              totalValue: 0
+            });
+          }
+
+          const stats = summarizeProductStats(results);
+
+          res.render('dashboard', {
             user: user,
             messages: req.flash('success'),
             errors: req.flash('error'),
             cartCount: cartSummary.count,
             cartTotal: cartSummary.total,
-            listingCount: 0,
-            totalQuantity: 0,
-            totalValue: 0
+            listingCount: results.length,
+            totalQuantity: stats.totalQuantity,
+            totalValue: stats.totalValue
           });
-        }
-
-        const stats = summarizeProductStats(results);
-
-        res.render('dashboard', {
-          user: user,
-          messages: req.flash('success'),
-          errors: req.flash('error'),
-          cartCount: cartSummary.count,
-          cartTotal: cartSummary.total,
-          listingCount: results.length,
-          totalQuantity: stats.totalQuantity,
-          totalValue: stats.totalValue
         });
       });
     }
@@ -1192,7 +1233,7 @@ app.post(
 
 // CART
 
-// Add a product to the logged-in user's session cart
+// Add a product to the logged-in user's cart (persisted in cart_items)
 app.post(
   '/cart/add/:id',
   checkAuthenticated,
@@ -1233,13 +1274,19 @@ app.post(
           return res.redirect('/products');
         }
 
-        addSellerNames(
-          results,
-          (sellerError, productsWithSellers) => {
-            if (sellerError) {
+        const insertSql = `
+          INSERT INTO cart_items (user_id, product_id)
+          VALUES (?, ?)
+        `;
+
+        db.query(
+          insertSql,
+          [req.session.user.user_id, productId],
+          (insertError) => {
+            if (insertError) {
               console.error(
-                'Seller query error:',
-                sellerError
+                'Cart insert error:',
+                insertError
               );
 
               req.flash(
@@ -1249,14 +1296,6 @@ app.post(
 
               return res.redirect('/products');
             }
-
-            if (!req.session.cart) {
-              req.session.cart = [];
-            }
-
-            req.session.cart.push(
-              productsWithSellers[0]
-            );
 
             req.flash(
               'success',
@@ -1271,22 +1310,95 @@ app.post(
   }
 );
 
-// Display the logged-in user's cart
+// Display the logged-in user's cart (read from cart_items)
 app.get(
   '/cart',
   checkAuthenticated,
   checkCartAccess,
   (req, res) => {
-    const cart = req.session.cart || [];
-    const cartSummary = summarizeCart(cart);
+    getCartItems(req.session.user.user_id, (error, cart) => {
+      if (error) {
+        console.error(
+          'Cart query error:',
+          error
+        );
 
-    res.render('cart', {
-      cart: cart,
-      total: cartSummary.total,
-      user: req.session.user,
-      messages: req.flash('success'),
-      errors: req.flash('error')
+        req.flash(
+          'error',
+          'Could not load your cart.'
+        );
+
+        return res.render('cart', {
+          cart: [],
+          total: 0,
+          user: req.session.user,
+          messages: req.flash('success'),
+          errors: req.flash('error')
+        });
+      }
+
+      const cartSummary = summarizeCart(cart);
+
+      res.render('cart', {
+        cart: cart,
+        total: cartSummary.total,
+        user: req.session.user,
+        messages: req.flash('success'),
+        errors: req.flash('error')
+      });
     });
+  }
+);
+
+// cart remove
+app.get(
+  '/cart/remove/:id',
+  checkAuthenticated,
+  checkCartAccess,
+  (req, res) => {
+    const cartId = req.params.id;
+
+    const sql = `
+      DELETE FROM cart_items
+      WHERE id = ?
+      AND user_id = ?
+    `;
+
+    db.query(
+      sql,
+      [cartId, req.session.user.user_id],
+      (error, result) => {
+        if (error) {
+          console.error(
+            'Cart remove error:',
+            error
+          );
+
+          req.flash(
+            'error',
+            'Could not remove item from cart.'
+          );
+
+          return res.redirect('/cart');
+        }
+
+        if (result.affectedRows === 0) {
+          req.flash(
+            'error',
+            'Cart item not found.'
+          );
+
+          return res.redirect('/cart');
+        }
+
+        req.flash(
+          'success',
+          'Item removed from cart.'
+        );
+
+        res.redirect('/cart');
+      }
+    );
   }
 );
 

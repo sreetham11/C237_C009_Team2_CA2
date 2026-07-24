@@ -32,7 +32,15 @@ CREATE TABLE products (
     FOREIGN KEY (seller_id) REFERENCES users(user_id)
 );
 
--- TODO: an "orders" table will be added later once the team finalizes that part of the schema
+
+CREATE TABLE cart_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+);
 
 -- Sample data to test the example GET / route
 INSERT INTO users (username, email, password, role) VALUES

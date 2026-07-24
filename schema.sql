@@ -1,8 +1,8 @@
 -- ResellVault Database Schema
 -- C237 CA2 Team Project
 
-CREATE DATABASE IF NOT EXISTS resellvault;
-USE resellvault;
+CREATE DATABASE IF NOT EXISTS `c237_009_team2_resellvault`;
+USE `c237_009_team2_resellvault`;
 
 -- users table (structure only — login/auth logic will be added once that lesson is covered in class)
 CREATE TABLE users (
